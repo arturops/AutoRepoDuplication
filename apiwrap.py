@@ -79,8 +79,8 @@ def create_repo(token):
 	headers = {'Authorization': 'token {}'.format(token)}
 	r = requests.get(url, headers=headers)
 	print(r)
-	print('\n\n{}\n\n'.format(r.__dict__))
-	return
+	print('\n\n{}\n\n'.format(r.json()))
+	return True
 
 
 def run():
