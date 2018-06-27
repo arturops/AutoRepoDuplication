@@ -68,6 +68,8 @@ def run():
 	print('\n\nclient_id (main) :{}\n\n'.format(client_id))
 	#token = get_user_auth(username)
 	#print('\n\ntoken (main) :{}\n\n'.format(token))
+	client_id = 'f7e621c81a2485a4bc70'
+	print('\n\nclient_id (github) :{}\n\n'.format(client_id))
 	get_auth(client_id)
 	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/access','afghrsgdg')
 	return web_auth_str
