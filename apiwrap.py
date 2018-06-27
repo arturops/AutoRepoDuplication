@@ -57,8 +57,8 @@ def get_auth(code):
 	print('\n\n\n ------------------------------------------------------\n\n')
 	print(r.url)
 	print('\n\n\n -- \n\n')
-	print(r.url['access_token'])
-	token = r.url['access_token']
+	print(r.data)
+	token = 'x' #r['access_token']
 	print(token)
 	#with open('test.html','w') as f:
 	#	f.write(str(resp.content))
