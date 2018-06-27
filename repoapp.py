@@ -39,6 +39,7 @@ def access():
 	if form.validate_on_submit():
 		web_github_login = apiwrap.run()
 		print('\n\n{}\n\n'.format(web_github_login))
+		redirect(web_github_login)
 		repo = 'https://github.com/{}/{}'.format(form.github_username.data, form.target_repo.data)
 		success_str = 'Repo {} has been created! Thanks {}!'.format(repo,form.github_username.data)
 		flash(success_str,'success')

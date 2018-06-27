@@ -44,12 +44,15 @@ def get_user_auth(username):
 
 
 def get_auth(client_id):
-	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/access','afghrsgdg')
-	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}'.format(client_id)
-	resp = requests.get(web_auth_str)
+	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/access','afghrsgdg')
+	payload = {'client_id': client_id}
+	web_auth_str = 'https://github.com/login/oauth/authorize'
+	resp = requests.get(web_auth_str,params=payload)
 	print(web_auth_str )
 	print('\n\n\n ------------------------------------------------------\n\n')
 	print(resp)
+	print('\n\n\n -- \n\n')
+	print(resp.url)
 	#with open('test.html','w') as f:
 	#	f.write(str(resp.content))
 	if resp.status_code >= 400:
@@ -58,7 +61,7 @@ def get_auth(client_id):
 	#code = resp.json()['code']
 	#print('\n\nCode: {}\n\n'.format(code))
 	#print('{}'.format(resp.content))
-
+	return resp.url
 
 def run():
 	username = 'arturops'
@@ -70,8 +73,8 @@ def run():
 	#print('\n\ntoken (main) :{}\n\n'.format(token))
 	client_id = 'f7e621c81a2485a4bc70'
 	print('\n\nclient_id (github) :{}\n\n'.format(client_id))
-	get_auth(client_id)
-	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/access','afghrsgdg')
+	web_auth_str = get_auth(client_id)
+	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}'.format(client_id)
 	return web_auth_str
 
 #run()
