@@ -6,7 +6,7 @@
 # Linux, MacOSX: $ export FLASK_APP=AutoRepoDuplication.py
 # Windows: $ set FLASK_APP=AutoRepoDuplication.py
 
-from flask import Flask, render_template, url_for, flash, redirect
+from flask import Flask, render_template, url_for, flash, redirect, request
 from forms import GithubUserForm
 import apiwrap
 import os
@@ -31,6 +31,14 @@ def about():
 		'ver' : '0.0.0.1',
 		'date' : 'June 25, 2018'
 	}
+
+	if request.method == 'POST':
+		success_str = 'Repo has been created! Thanks!'
+		flash(success_str,'success')
+		print(request)
+		print('\n\n{}\n\n'.format(request.args))
+
+
 	return render_template('about.html', title='About', version=version)
 
 
@@ -38,18 +46,17 @@ def about():
 def access():
 	form = GithubUserForm()
 	if form.validate_on_submit():
-		apiwrap.test()
-		#web_github_login = apiwrap.run()
-		#print('\n\n{}\n\n'.format(web_github_login))
-		r = requests.get('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
-		print('\n\n{}\n{}\n'.format(r.url,r))
-		redirect(r.url)
-
+		
 		repo = 'https://github.com/{}/{}'.format(form.github_username.data, form.target_repo.data)
 		success_str = 'Repo {} has been created! Thanks {}!'.format(repo,form.github_username.data)
 		flash(success_str,'success')
 		flash(repo,'success')
-		#redirect(web_github_login)
+
+		apiwrap.test()
+		#r = requests.get('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
+		#print('\n\n{}\n{}\n'.format(r.url,r))
+		return redirect('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
+
 		return redirect(url_for('home'))
 	return render_template('access.html',title='User', form=form)
 

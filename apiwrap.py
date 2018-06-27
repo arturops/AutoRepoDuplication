@@ -4,6 +4,12 @@ import requests
 
 GITHUB_API = 'https://api.github.com/'
 
+GITHUB_OAUTHS = 'https://github.com/login/oauth/authorize'
+
+client = { 'client_id':'f7e621c81a2485a4bc70',
+			'client_secret':'fe67f77d4b2c56a38e7e99cc2d6b0720e6b4d4d0'
+}
+
 def github_url(path):
 	#return urljoin(GITHUB_API,path)
 	return GITHUB_API + path
@@ -46,8 +52,7 @@ def get_user_auth(username):
 def get_auth(client_id):
 	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/access','afghrsgdg')
 	payload = {'client_id': client_id}
-	web_auth_str = 'https://github.com/login/oauth/authorize'
-	resp = requests.get(web_auth_str,params=payload)
+	resp = requests.get(GITHUB_OAUTHS,params=payload)
 	print(web_auth_str )
 	print('\n\n\n ------------------------------------------------------\n\n')
 	print(resp)
@@ -80,7 +85,6 @@ def run():
 #run()
 
 def test():
-	username = 'arturops'
 	get_github_motto()
 
 
