@@ -3,8 +3,8 @@ import requests
 #from urlparse import urljoin
 
 GITHUB_API = 'https://api.github.com/'
-
 GITHUB_OAUTHS = 'https://github.com/login/oauth/authorize'
+GITHUB_TOKEN = 'https://github.com/login/oauth/access_token'
 
 client = { 'client_id':'f7e621c81a2485a4bc70',
 			'client_secret':'fe67f77d4b2c56a38e7e99cc2d6b0720e6b4d4d0'
@@ -49,24 +49,26 @@ def get_user_auth(username):
 	return token
 
 
-def get_auth(client_id):
-	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/access','afghrsgdg')
-	payload = {'client_id': client_id}
-	resp = requests.get(GITHUB_OAUTHS,params=payload)
-	print(web_auth_str )
+def get_auth(code):
+	payload = client
+	payload['code'] = code
+	r = requests.post(GITHUB_TOKEN,params=payload)
+	print(r)
 	print('\n\n\n ------------------------------------------------------\n\n')
-	print(resp)
+	print(r.url)
 	print('\n\n\n -- \n\n')
-	print(resp.url)
+	print(r.json())
+	token = r.json()['token']
+	print(token)
 	#with open('test.html','w') as f:
 	#	f.write(str(resp.content))
-	if resp.status_code >= 400:
+	if r.status_code >= 400:
 		# Error
-		raise ApiError('GET Authorizations {}'.format(resp.status_code))
+		raise ApiError('GET Authorizations {}'.format(r.status_code))
 	#code = resp.json()['code']
 	#print('\n\nCode: {}\n\n'.format(code))
 	#print('{}'.format(resp.content))
-	return resp.url
+	return token
 
 def run():
 	username = 'arturops'

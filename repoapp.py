@@ -32,11 +32,18 @@ def about():
 		'date' : 'June 25, 2018'
 	}
 
+	
 	if request.method == 'GET':
-		success_str = 'Repo has been created! Thanks!'
-		flash(success_str,'success')
-		print(request)
-		print('\n\n{}\n\n'.format(request.args))
+		
+		if 'code' in request.args:
+			print(request)
+			success_str = 'Repo has been created! Thanks!'
+			flash(success_str,'success')
+			print('\n\n{}\n\n'.format(request.args))
+			code = request.args['code']
+			print('\n\n{}\n\n'.format(code))
+			token = apiwrap.get_auth(code)
+			print('FLASK SIDE --- TOKEN {}'.format(token))
 
 
 	return render_template('about.html', title='About', version=version)
