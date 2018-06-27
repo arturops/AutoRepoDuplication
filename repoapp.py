@@ -10,6 +10,7 @@ from flask import Flask, render_template, url_for, flash, redirect
 from forms import GithubUserForm
 import apiwrap
 import os
+import requests
 
 app = Flask(__name__)
 
@@ -37,10 +38,13 @@ def about():
 def access():
 	form = GithubUserForm()
 	if form.validate_on_submit():
-
+		apiwrap.test()
 		#web_github_login = apiwrap.run()
 		#print('\n\n{}\n\n'.format(web_github_login))
-		redirect('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
+		r = requests.get('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
+		print('\n\n{}\n{}\n'.format(r.url,r))
+		redirect(r.url)
+
 		repo = 'https://github.com/{}/{}'.format(form.github_username.data, form.target_repo.data)
 		success_str = 'Repo {} has been created! Thanks {}!'.format(repo,form.github_username.data)
 		flash(success_str,'success')
