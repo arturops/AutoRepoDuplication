@@ -58,9 +58,9 @@ def get_auth(code):
 	print(r.url)
 	print(r.text)
 	print('\n\n\n -- \n\n')
-	print(r.__dict__)
-	token = str(r.__dict__['_content'])
-	token_list = token.split('&')
+	#print(r.__dict__)
+	#token = str(r.__dict__['_content'])
+	token_list = r.text.split('&')
 	print(token_list)
 	token = token_list[0].split('=')[1]
 	print(token)
@@ -73,6 +73,15 @@ def get_auth(code):
 	#print('\n\nCode: {}\n\n'.format(code))
 	#print('{}'.format(resp.content))
 	return token
+
+def create_repo(token):
+	url = 'https://api.github.com/user/repos'
+	headers = {'Authorization': 'token {}'.format(token)}
+	r = requests.get(url, headers=headers)
+	print(r)
+	print('\n\n{}\n\n'.format(r.__dict__))
+	return
+
 
 def run():
 	username = 'arturops'

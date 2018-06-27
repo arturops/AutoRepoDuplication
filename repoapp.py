@@ -37,13 +37,18 @@ def about():
 		
 		if 'code' in request.args:
 			print(request)
-			success_str = 'Repo has been created! Thanks!'
-			flash(success_str,'success')
+			
 			print('\n\n{}\n\n'.format(request.args))
 			code = request.args['code']
 			print('\n\n{}\n\n'.format(code))
 			token = apiwrap.get_auth(code)
 			print('FLASK SIDE --- TOKEN {}'.format(token))
+			success_repo = apiwrap.create_repo(token)
+
+			if success_repo:
+				print(' ----- ALL SET!! ------ ')
+			#	success_str = 'Repo has been created! Thanks!'
+			#	flash(success_str,'success')
 
 
 	return render_template('about.html', title='About', version=version)
