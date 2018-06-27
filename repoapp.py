@@ -37,11 +37,14 @@ def about():
 def access():
 	form = GithubUserForm()
 	if form.validate_on_submit():
-		apiwrap.run()
+		web_github_login = apiwrap.run()
 		repo = 'https://github.com/{}/{}'.format(form.github_username.data, form.target_repo.data)
 		success_str = 'Repo {} has been created! Thanks {}!'.format(repo,form.github_username.data)
 		flash(success_str,'success')
 		flash(repo,'success')
+
+		redirect(web_github_login)
+
 		return redirect(url_for('home'))
 	return render_template('access.html',title='User', form=form)
 
