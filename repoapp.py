@@ -32,7 +32,7 @@ def about():
 		'date' : 'June 25, 2018'
 	}
 
-	if request.method == 'POST':
+	if request.method == 'GET':
 		success_str = 'Repo has been created! Thanks!'
 		flash(success_str,'success')
 		print(request)
