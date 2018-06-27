@@ -44,7 +44,7 @@ def get_user_auth(username):
 
 
 def get_auth(client_id):
-	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/home','afghrsgdg')
+	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/access','afghrsgdg')
 	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}'.format(client_id)
 	resp = requests.get(web_auth_str)
 	print(web_auth_str )
@@ -69,7 +69,7 @@ def run():
 	#token = get_user_auth(username)
 	#print('\n\ntoken (main) :{}\n\n'.format(token))
 	get_auth(client_id)
-	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/home','afghrsgdg')
+	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://autorepo-github.herokuapp.com/access','afghrsgdg')
 	return web_auth_str
 
 #run()
