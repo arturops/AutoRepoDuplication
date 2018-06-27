@@ -44,12 +44,12 @@ def get_user_auth(username):
 
 
 def get_auth(client_id):
-	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://www.google.com','afghrsgdg')
-	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}'.format(client_id)
+	web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}'.format(client_id,'https://www.google.com','afghrsgdg')
+	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}'.format(client_id)
 	resp = requests.get(web_auth_str)
 	print(web_auth_str )
 	print('\n\n\n ------------------------------------------------------\n\n')
-	print(resp.content)
+	print(resp)
 	#with open('test.html','w') as f:
 	#	f.write(str(resp.content))
 	if resp.status_code >= 400:
