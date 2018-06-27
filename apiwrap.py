@@ -52,12 +52,12 @@ def get_user_auth(username):
 def get_auth(code):
 	payload = client
 	payload['code'] = code
-	r = requests.get(GITHUB_TOKEN,params=payload)
+	r = requests.post(GITHUB_TOKEN,params=payload)
 	print(r)
 	print('\n\n\n ------------------------------------------------------\n\n')
 	print(r.url)
 	print('\n\n\n -- \n\n')
-	print(r.data)
+	print(r.__dict__)
 	token = 'x' #r['access_token']
 	print(token)
 	#with open('test.html','w') as f:
