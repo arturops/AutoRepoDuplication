@@ -74,10 +74,23 @@ def get_auth(code):
 	#print('{}'.format(resp.content))
 	return token
 
-def create_repo(token):
+def list_repo(token):
 	url = 'https://api.github.com/user/repos'
 	headers = {'Authorization': 'token {}'.format(token)}
 	r = requests.get(url, headers=headers)
+	print(r)
+	print('\n\n{}\n\n'.format(r.json()))
+	return True
+
+def create_repo(token,repo_name='repotest'):
+	url = 'https://api.github.com/user/repos'
+	headers = {'Authorization': 'token {}'.format(token)}
+	json_data = { 	"name" : repo_name,
+					"description": "First API repo",
+					"auto_init" : false, # no README
+					"private" : false # public repo
+				}
+	r = requests.post(url,headers=headers, json=json_data)
 	print(r)
 	print('\n\n{}\n\n'.format(r.json()))
 	return True
