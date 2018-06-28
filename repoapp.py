@@ -67,9 +67,10 @@ def access():
 		apiwrap.test()
 		#r = requests.get('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
 		#print('\n\n{}\n{}\n'.format(r.url,r))
-		return redirect('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
+		return redirect(apiwrap.get_github_auth_url())
+		#return redirect('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
 
-		return redirect(url_for('home'))
+		#return redirect(url_for('home'))
 	return render_template('access.html',title='User', form=form)
 
 

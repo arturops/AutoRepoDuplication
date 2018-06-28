@@ -34,19 +34,9 @@ def get_user_id(username):
 	return client_id
 
 
-def get_user_auth(username):
-	json_params = {"scopes": ["repo", "user"], "note": "test"}
-	resp = requests.post('https://api.github.com/authorizations/', json=json_params)
-	if resp.status_code >= 400:
-		# Error
-		print(resp)
-		print(resp.content)
-		raise ApiError('GET Authorizations {}'.format(resp.status_code))
-	print(resp)
-	token = resp.json()['token']
-	print('token: {}'.format(token))
-	print('{}'.format(resp.content))
-	return token
+def get_github_auth_url():
+	url = '{}?client_id={}&scope={}'.format(GITHUB_OAUTHS, client['client_id'], 'public_repo')
+	return url
 
 
 def get_auth(code):
