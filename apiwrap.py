@@ -85,10 +85,10 @@ def list_repo(token):
 def create_repo(token,repo_name='repotest'):
 	url = 'https://api.github.com/user/repos'
 	headers = {'Authorization': 'token {}'.format(token)}
-	json_data = { 	"name" : repo_name,
-					"description": "First API repo",
-					"auto_init" : false, # no README
-					"private" : false # public repo
+	json_data = { 	'name' : repo_name,
+					'description': 'First API repo',
+					'auto_init' : 'false', # no README
+					'private' : 'false' # public repo
 				}
 	r = requests.post(url,headers=headers, json=json_data)
 	print(r)
