@@ -77,8 +77,8 @@ def create_repo(token,repo_name='repotest'):
 	headers = {'Authorization': 'token {}'.format(token)}
 	json_data = { 	'name' : repo_name,
 					'description': 'First API repo',
-					'auto_init' : False #, # no README
-					#'private' : False # public repo
+					'auto_init' : True, # add README so that it generates an initial commit
+					'private' : False # public repo
 				}
 	r = requests.post(url,headers=headers, json=json_data)
 	print(r)
