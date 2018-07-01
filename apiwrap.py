@@ -466,7 +466,7 @@ class GithubAPI(API):
 			tree : the tree structure
 		"""
 		
-		url = self.__github_url('repos/{}/{}/git/trees/{}'.format(owner,repo,tree_sha))
+		url = self.__github_url('repos/{}/{}/git/trees/{}'.format(owner,repo_name,tree_sha))
 
 		params = {'recursive' : 1}
 
@@ -524,7 +524,7 @@ class GithubAPI(API):
 			posted_tree_sha : the SHA of the posted tree structure
 		"""
 		
-		url = self.__github_url('repos/{}/{}/git/trees'.format(owner,repo))
+		url = self.__github_url('repos/{}/{}/git/trees'.format(owner,repo_name))
 		#GITHUB_API+ 'repos/{}/{}/git/trees'.format(owner,repo)
 		
 		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
@@ -554,7 +554,6 @@ class GithubAPI(API):
 		It requires the SHA of the posted tree to commit.
 		For more details: https://developer.github.com/v3/git/commits/#create-a-commit 
 		
-
 		Parameters:
 			new_tree_sha: The SHA of the previously posted tree  
 			owner : The username
@@ -568,7 +567,7 @@ class GithubAPI(API):
 			commit_sha : the SHA of the commit
 		"""
 		
-		url = self.__github_url('repos/{}/{}/git/commits'.format(owner, repo))
+		url = self.__github_url('repos/{}/{}/git/commits'.format(owner, repo_name))
 		#GITHUB_API+'repos/{}/{}/git/commits'.format(owner, repo)
 
 		parents = []
@@ -603,10 +602,26 @@ class GithubAPI(API):
 
 
 
-	def update_reference(owner, repo, reference, new_sha, force_update=True):
-		#https://developer.github.com/v3/git/refs/#update-a-reference
+	def update_reference(owner, reference, new_commit_sha, repo_name=TARGET_REPO_NAME, force_update=True):
+		"""
+		Updates the reference of a commit in the github repository, so that it reflects the changes in the repo.
+		It requires the SHA of the new commit.
+		For more details: https://developer.github.com/v3/git/refs/#update-a-reference
+		
+		Parameters:
+			owner : The username
+			reference: the reference branch to which to update the commit
+			new_commit_sha: The SHA of the new commit 
+			repo_name : The name of the repo in which to commit
+						Default value is TARGET_REPO_NAME from GithubAPI class
+			force_update: Defines if the update will be forced or if it is a fast forward update.
+						Default value is True
 
-		url = GITHUB_API+'repos/{}/{}/git/refs/{}'.format(owner, repo, reference)
+		Returns:
+			True if the update was succesful, otherwise it returns False
+		"""
+
+		url = GITHUB_API+'repos/{}/{}/git/refs/{}'.format(owner, repo_name, reference)
 		payload = { 'sha' : new_sha, 
 					'force' : force_update}
 		token = '8a5f3ffdc47142562f00dc016bacadb0cfbf539d'
