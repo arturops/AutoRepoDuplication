@@ -1,1 +1,1 @@
-{ "owner_username" : "arturops",  "app" : {"client_id":"f7e621c81a2485a4bc70","client_secret":"fe67f77d4b2c56a38e7e99cc2d6b0720e6b4d4d0"}}
+{ "owner" : {"username" : "arturops", "repo" : "AutoRepoDuplication"}, "user" : {"repo": "AutoRepo"}, "app" : {"client_id":"f7e621c81a2485a4bc70","client_secret":"fe67f77d4b2c56a38e7e99cc2d6b0720e6b4d4d0"}}

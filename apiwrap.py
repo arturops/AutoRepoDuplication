@@ -125,23 +125,19 @@ class GithubAPI(API):
 			None
 		"""
 		API.__init__(self, debug=debug)
-		#client = { 'client_id':'f7e621c81a2485a4bc70',
-		#	'client_secret':'fe67f77d4b2c56a38e7e99cc2d6b0720e6b4d4d0'
-		#}
 		
-		self.user = GithubAPIuser('repotest')
-		self.user.username = 'Unknownn' #Extracted after authorization token is obtained
-
 		# read owner_info
 		with open('owner_info.txt') as json_file:
 			owner_info = json.load(json_file)
-		self.owner = GithubAPIuser('AutoRepoDuplication')
-		self.owner.username = owner_info['owner_username'] # MUST be ingested from another file
-		self.client_app_info = owner_info['app'] #MUST be ingested from another file
 
-		#self.owner = GithubAPIuser('AutoRepoDuplication')
-		#self.owner.username = 'arturops' # MUST be ingested from another file
-		#self.client_app_info = client #MUST be ingested from another file
+		self.user = GithubAPIuser(owner_info['user']['repo'])
+		self.user.username = 'Unknownn' #Extracted after authorization token is obtained
+
+		
+		self.owner = GithubAPIuser(owner_info['owner']['repo'])
+		self.owner.username = owner_info['owner']['username'] # ingested from owner_info file
+		self.client_app_info = owner_info['app'] # ingested from owner_info file
+
 
 	def __github_url(self, path):
 		"""
