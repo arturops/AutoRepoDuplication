@@ -108,7 +108,7 @@ class GithubAPI(API):
 	GITHUB_USER_REPOS = 'https://api.github.com/user/repos'
 	GITHUB_REPOS = 'https://api.github.com/repos/'
 
-	TARGET_REPO_NAME = 'repotest' #'AutoRepoDuplication'
+	TARGET_REPO_NAME = 'AutoRepo'
 	ORIGIN_REPO_NAME = 'AutoRepoDuplication'
 
 	def __init__(self, debug=False):
@@ -251,8 +251,6 @@ class GithubAPI(API):
 					NOTE: This token is used instead of a user's username and password, so treated like a password
 
 		"""
-		#payload = client
-		#payload['code'] = code
 
 		# creates the parameters to ask for the access_token
 		params = self.client_app_info
@@ -324,7 +322,7 @@ class GithubAPI(API):
 			return False
 
 
-	def get_HEADreference(self, token, owner, repo_name=TARGET_REPO_NAME, branch='master'):
+	def get_HEADreference(self, owner, repo_name=TARGET_REPO_NAME, branch='master'):
 		"""
 		Retrieves the HEAD reference of the repo_name given and the branch parameter passed. 
 		NOTE: 	Default branch is master. 
@@ -333,7 +331,6 @@ class GithubAPI(API):
 		For more details: https://developer.github.com/v3/git/refs/#get-a-reference
 
 		Parameters:
-			token : The authorization token for the username (owner) passed
 			owner : The username of the user
 			repo_name : Name of the repository to find the reference from in the user's Github
 			NOTE: Default value is TARGET_REPO_NAME from the GithubAPI class
@@ -347,11 +344,8 @@ class GithubAPI(API):
 		"""
 		
 		owner_repo_refs = owner + '/'+ repo_name + '/git/refs/heads/' + branch 
-		url = self.__github_url('repos/'+owner_repo_refs) #GITHUB_REPOS+owner_repo_refs
+		url = self.__github_url('repos/'+owner_repo_refs) 
 
-		#headers = { 'Authorization' : 'token {}'.format(token)}
-
-		#r = requests.get(url, headers=headers)
 
 		r = requests.get(url)
 
@@ -504,24 +498,28 @@ class GithubAPI(API):
 			r = requests.get(url)
 
 		tree = ''
+		tree_clean = []
 		if r.status_code == 200:
 			tree = r.json() # tree = json.loads(r.text)
 			
 			# cleaning the response tree
 			del tree['url']
 			del tree['truncated']
+			
 			# remove any tree element, it will be infered by the 'path' of blobs
 			# remove also the owner_info file so that credentials are not distributed to next users
-			tree['tree'][:] = [item for item in tree['tree'] if item['type'] != 'tree'\
-															 and item['path'] != 'owner_info.txt']
-			
+			#tree['tree'][:] = [item for item in tree['tree'] if item['type'] != 'tree'\
+			#												 and item['path'] != 'owner_info.txt']
 			# clean blobs
 			for element in tree['tree']:
-				if element['mode'] == '100644': #BLOB type has mode 100644
+				if element['type'] != 'tree' and element['path'] != 'owner_info.txt' and \
+				element['mode'] == '100644': #BLOB type has mode 100644
 					del element['size']
-				#else is a tree and has no size, but has url
-				del element ['url']
+					#else is a tree and has no size, but has url
+					del element ['url']
+					tree_clean.append(element)
 
+			tree['tree'] = tree_clean
 
 		if self.debug:
 
@@ -584,7 +582,6 @@ class GithubAPI(API):
 		"""
 		
 		url = self.__github_url('repos/{}/{}/git/trees'.format(owner,repo_name))
-		#GITHUB_API+ 'repos/{}/{}/git/trees'.format(owner,repo)
 		
 		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
 
@@ -627,7 +624,6 @@ class GithubAPI(API):
 		"""
 		
 		url = self.__github_url('repos/{}/{}/git/commits'.format(owner, repo_name))
-		#GITHUB_API+'repos/{}/{}/git/commits'.format(owner, repo)
 
 		parents = []
 		if HEAD_tree_sha != None:
@@ -681,7 +677,6 @@ class GithubAPI(API):
 		"""
 
 		url = self.__github_url('repos/{}/{}/git/refs/{}'.format(owner, repo_name, reference))
-		#GITHUB_API+'repos/{}/{}/git/refs/{}'.format(owner, repo_name, reference)
 
 		payload = { 'sha' : new_commit_sha, 
 					'force' : force_update}
@@ -744,8 +739,7 @@ class GithubAPI(API):
 		success = self.get_user_username()
 
 		# Repo Owner 
-		branch_url, branch_sha = self.get_HEADreference(self.user.get_token(),
-													self.owner.username, 
+		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
 													self.owner.repo, origin_branch)
 		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url) 
 		target_tree = self.get_target_tree(self.owner.username, HEAD_tree_sha, self.owner.repo, recursive_tree=True)
@@ -754,8 +748,7 @@ class GithubAPI(API):
 
 
 		# Repo User/Client 
-		branch_url, branch_sha = self.get_HEADreference(self.user.get_token(),
-													self.user.username, 
+		branch_url, branch_sha = self.get_HEADreference(self.user.username, 
 													self.user.repo, target_branch)
 		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url)
 		content_tree = self.convert_to_content_tree(expected_tree)

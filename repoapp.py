@@ -1,21 +1,17 @@
 
 # Web application to automatically duplicate a github repository 
 # from one account to another
-# To run for first time need to add an environment variable
 
-# Linux, MacOSX: $ export FLASK_APP=AutoRepoDuplication.py
-# Windows: $ set FLASK_APP=AutoRepoDuplication.py
 
 from flask import Flask, render_template, url_for, flash, redirect, request
 from forms import GithubUserForm
 import apiwrap
-import os
-import requests
+
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = '2aba1f6ebe92e925ec34c8486003cf08'
-
+app.config['DEBUG'] = True
 
 @app.route('/')
 @app.route('/home')
@@ -45,12 +41,6 @@ def docs():
 def access():
 	form = GithubUserForm()
 	if form.validate_on_submit():
-		
-		#repo = 'https://github.com/{}/{}'.format(form.github_username.data, form.target_repo.data)
-		#success_str = 'Repo {} has been created! Thanks {}!'.format(repo,form.github_username.data)
-		#flash(success_str,'success')
-		#flash(repo,'success')
-
 
 		github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
 		#print( github.testAPI() )
@@ -74,7 +64,6 @@ def done():
 			success_repo = github.duplicate_repo(code)
 
 			if success_repo:
-				print(' ----- ALL SET!! ------ ')
 				username = github.user.username
 				repo = github.user.repo
 				success_str = 'Successful Repo Duplication! Thanks!'
@@ -101,4 +90,4 @@ def server_error(e):
 
 # To run in debug mode
 if __name__ == '__main__':
-	app.run(debug=True)
+	app.run()
