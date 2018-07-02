@@ -695,6 +695,7 @@ class GithubAPI(API):
 	def get_user_username(self):
 		"""
 		Retrieves the username of a user that has given the app an authorization 
+		For more details: https://developer.github.com/v3/users/#get-the-authenticated-user
 
 		Parameters:
 			None
