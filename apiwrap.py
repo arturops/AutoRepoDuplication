@@ -182,7 +182,7 @@ class GithubAPI(API):
 		print('Github phrase:\n\t\t \"{}\"'.format(self.__get_github_motto()))
 
 
-	def check_response(self, method, payload='None', url, response, success_code=None, task_message='' ):
+	def check_response(self, method, url, response, payload='None', success_code=None, task_message='' ):
 		"""
 		Print on the stdout the payload in the request, the type of request and, the response URL, the status 
 		of the response and the content.
@@ -268,7 +268,7 @@ class GithubAPI(API):
 			
 
 		if self.debug:
-			check_response('POST', params, GITHUB_TOKEN, r)
+			check_response('POST', GITHUB_TOKEN, r, params)
 
 			if token:
 				print('\n------- SUCCESS getting the token!! ------- ')
@@ -312,7 +312,7 @@ class GithubAPI(API):
 		r = requests.post(url,headers=headers, json=data)
 		
 		if self.debug:
-			check_response('POST', data, url, r, 201, ' creating repo!! ')
+			check_response('POST', url, r, data, 201, ' creating repo!! ')
 
 		if r.status_code == 201: 
 			return True
@@ -320,7 +320,7 @@ class GithubAPI(API):
 			return False
 
 
-	def get_HEADreference(token=None, owner, repo_name=TARGET_REPO_NAME, branch='master'):
+	def get_HEADreference(self, token, owner, repo_name=TARGET_REPO_NAME, branch='master'):
 		"""
 		Retrieves the HEAD reference of the repo_name given and the branch parameter passed. 
 		NOTE: 	Default branch is master. 
@@ -363,14 +363,14 @@ class GithubAPI(API):
 			if r.status_code == 201: 
 				print('\nreference URL: {}\nreference SHA: {}\n'.format(branch_url, branch_sha))
 
-			check_response('GET', 'None', url, r, 201, ' retrieving reference!! ')
+			check_response('GET', url, r, 'None', 201, ' retrieving reference!! ')
 
 
 		return branch_url, branch_sha
 
 
 
-	def get_commit(commit_reference_url):
+	def get_commit(self, commit_reference_url):
 		"""
 		Retrieves a commit's reference tree of the given url. 
 		For more details: https://developer.github.com/v3/git/commits/#response
@@ -395,12 +395,12 @@ class GithubAPI(API):
 			if r.status_code == 200: 
 				print('\ntree reference URL: {}\ntree reference SHA: {}\n'.format(tree_url, tree_sha))
 
-			check_response('GET', 'None', commit_reference_url, r, 200, ' retrieving tree reference!! ')
+			check_response('GET', commit_reference_url, r, 'None', 200, ' retrieving tree reference!! ')
 			
 		return tree_url, tree_sha
 
 
-	def get_file_content(path, file):
+	def get_file_content(self, path, file):
 		"""
 		Retrieves the content of a file 
 
@@ -416,7 +416,7 @@ class GithubAPI(API):
 		return content
 
 
-	def create_blob(owner, repo_name = TARGET_REPO_NAME, file_path, file, return_content=True):
+	def create_blob(self, owner, file_path, file, repo_name = TARGET_REPO_NAME, return_content=True):
 		"""
 		Retrieves the content of a file and generates a SHA and a blob 
 		For more details: https://developer.github.com/v3/git/blobs/#create-a-blob
@@ -463,7 +463,7 @@ class GithubAPI(API):
 			if r.status_code == 201: 
 				print('Blob SHA {}'.format(sha))
 
-			check_response('POST', payload, url, r, 201, ' creating blob!! ')
+			check_response('POST', url, r, payload, 201, ' creating blob!! ')
 
 		
 		if return_content:
@@ -472,7 +472,7 @@ class GithubAPI(API):
 			return sha
 
 
-	def get_target_tree(owner, repo_name=ORIGIN_REPO_NAME, tree_sha, recursive_tree=True):
+	def get_target_tree(self, owner, tree_sha, repo_name=ORIGIN_REPO_NAME, recursive_tree=True):
 		"""
 		Retrieves a tree from an owner, repo_name and the tree SHA. The retrieval can be non-recursive which will 
 		not return files in nested trees, or it can be recursive and return also the nested trees.
@@ -525,27 +525,31 @@ class GithubAPI(API):
 				print(tree)
 				print('\n-------------------------------------------------------------------------\n')
 
-			check_response('GET', params, url, r, 200, 'retrieving target tree !! ')
+			check_response('GET', url, r, params, 200, 'retrieving target tree !! ')
 
 		return tree
 
 
-	def convert_to_content_tree(tree):
+	def convert_to_content_tree(self, tree):
 		"""
 		Convert a given tree structure that contains only the blobs SHA's into a valid content_tree. The 
 		content tree will use the content field in the HTTP request to add new blobs.
 		This new tree will be posted/created into the user's github repo.
 		In summary, it swaps SHA's for actual file content. This is required for the first commit of files.
 
-		
+		Parameters:
+			tree : the tree to convert into a content tree
+
+		Returns:
+			content_tree : A tree that has removed SHA field for Content fields
 
 		"""
-		# 
+		
 		content_tree = []
 		for item in tree:
 			if item['mode'] == '100644':
 				file_path = item['path']
-				blob_sha, blob_content = create_blob(self.user.username, repo_name, file_path, '')
+				blob_sha, blob_content = create_blob(self.user.username, file_path, '', self.user.repo)
 				if blob_sha != item['sha']:
 					print('\n**********  FILE: {} does NOT have SAME SHA as tree !  ***********\n'.format(file_path))
 				del item['sha']
@@ -555,7 +559,7 @@ class GithubAPI(API):
 		return content_tree
 
 
-	def create_tree(owner, tree, repo_name=TARGET_REPO_NAME, base_tree=None):
+	def create_tree(self, owner, tree, repo_name=TARGET_REPO_NAME, base_tree=None):
 		"""
 		Posts a tree in the user's Github desired repo and gets a response of the posted tree structure 
 		and its SHA of such tree
@@ -593,12 +597,12 @@ class GithubAPI(API):
 			posted_tree_sha	= r.json()['sha']
 
 		if self.debug:
-			check_response('POST', payload, url, r, 201, ' posting the tree !!')
+			check_response('POST', url, r, payload, 201, ' posting the tree !!')
 
 		return posted_tree_sha
 
 
-	def create_commit(new_tree_sha, owner, repo_name=TARGET_REPO_NAME, HEAD_tree_sha=None ):
+	def create_commit(self, new_tree_sha, owner, repo_name=TARGET_REPO_NAME, HEAD_tree_sha=None ):
 		"""
 		Creates a new commit in the user's Github desired repo in order to commit a previously posted tree. 
 		It requires the SHA of the posted tree to commit.
@@ -646,13 +650,13 @@ class GithubAPI(API):
 
 		if self.debug:
 			print('\nCommit SHA: {}'.format(commit_sha))
-			check_response('POST', payload, url, r, 201, ' creating commit !! ')		
+			check_response('POST', url, r, payload, 201, ' creating commit !! ')		
 
 		return commit_sha
 
 
 
-	def update_reference(owner, reference, new_commit_sha, repo_name=TARGET_REPO_NAME, force_update=True):
+	def update_reference(self, owner, reference, new_commit_sha, repo_name=TARGET_REPO_NAME, force_update=True):
 		"""
 		Updates the reference of a commit in the github repository, so that it reflects the changes in the repo.
 		It requires the SHA of the new commit.
@@ -682,7 +686,7 @@ class GithubAPI(API):
 		r = requests.patch(url, headers=headers, json=payload)
 
 		if self.debug:
-			check_response('PATCH', payload, url, r, 200, ' updating reference !! ' )
+			check_response('PATCH', url, r, payload, 200, ' updating reference !! ' )
 
 		if r.status_code == 200:
 			return	True
@@ -690,7 +694,7 @@ class GithubAPI(API):
 			return False 
 
 
-	def duplicate_repo(code, origin_branch='master', target_branch='master'):
+	def duplicate_repo(self, code, origin_branch='master', target_branch='master'):
 		
 		# Get user/client token and create repo
 		self.user.set_token( get_auth(code) )
@@ -702,7 +706,7 @@ class GithubAPI(API):
 													self.owner.username, 
 													self.owner.repo, origin_branch)
 		HEAD_tree_url, HEAD_tree_sha = get_commit(branch_url) 
-		target_tree = get_target_tree(self.owner.username,self.owner.repo, HEAD_tree_sha, recursive_tree=True)
+		target_tree = get_target_tree(self.owner.username, HEAD_tree_sha, self.owner.repo, recursive_tree=True)
 		expected_tree_sha = target_tree['sha']
 		expected_tree = target_tree['tree']
 
