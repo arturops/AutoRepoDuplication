@@ -36,14 +36,15 @@ def about():
 	if request.method == 'GET':
 		
 		if 'code' in request.args:
-			print(request)
+			#print(request)
 			
 			print('\n\n{}\n\n'.format(request.args))
 			code = request.args['code']
 			print('\n\n{}\n\n'.format(code))
-			token = apiwrap.get_auth(code)
-			print('FLASK SIDE --- TOKEN {}'.format(token))
-			success_repo = apiwrap.create_repo(token)
+			github = apiwrap.GithubAPI(debug=True)
+			success_repo = github.duplicate_repo(code)
+			#print('FLASK SIDE --- TOKEN {}'.format(token))
+			#success_repo = apiwrap.create_repo(token)
 
 			if success_repo:
 				print(' ----- ALL SET!! ------ ')
@@ -64,13 +65,12 @@ def access():
 		flash(success_str,'success')
 		flash(repo,'success')
 
-		apiwrap.test()
-		#r = requests.get('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
-		#print('\n\n{}\n{}\n'.format(r.url,r))
-		return redirect(apiwrap.get_github_auth_url())
+
+		github = apiwrap.GithubAPI(debug=True)
+		print( github.test() )
+		return redirect(github.get_github_auth_url())
 		#return redirect('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
 
-		#return redirect(url_for('home'))
 	return render_template('access.html',title='User', form=form)
 
 

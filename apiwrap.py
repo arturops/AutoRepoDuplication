@@ -21,7 +21,7 @@ class APIuser():
 		self.__token = INVALID_TOKEN
 
 
-	def set_token(token):
+	def set_token(self, token):
 		"""
 		Helper function to set a user's access token 
 
@@ -34,7 +34,7 @@ class APIuser():
 		self.__token = token
 
 
-	def get_token():
+	def get_token(self):
 		"""
 		Helper function to get a previously stored user's access token 
 
@@ -45,6 +45,26 @@ class APIuser():
 			__token : User's access token
 		"""
 		return self.__token
+
+class GithubAPIuser(APIuser):
+
+	USER_TARGET_REPO_NAME = 'repotest' #'AutoRepoDuplication'
+	USER_ORIGIN_REPO_NAME = 'AutoRepoDuplication'
+
+	def __init__(self, repo=USER_ORIGIN_REPO_NAME ):
+		"""
+		GithubAPIuser class constructor
+
+		Parameters:
+			None
+
+		Returns:
+			None
+		"""
+		APIuser.__init()
+		self.repo = repo
+
+
 
 
 class API():
@@ -62,9 +82,9 @@ class API():
 			None
 		"""
 		self.debug = debug
-		self.user = APIuser()
+		
 
-	def APIerror(message):
+	def APIerror(self, message):
 		"""
 		Prints in stdin the error of the API
 
@@ -92,7 +112,7 @@ class GithubAPI(API):
 	TARGET_REPO_NAME = 'repotest' #'AutoRepoDuplication'
 	ORIGIN_REPO_NAME = 'AutoRepoDuplication'
 
-	def __init__(self, debug=False, client_app_info):
+	def __init__(self, debug=False):
 		"""
 		GithubAPI class inherited from the API class
 		GithubAPI class constructor
@@ -106,10 +126,16 @@ class GithubAPI(API):
 			None
 		"""
 		API.__init__(debug)
-		self.client_app_info = client_app_info
+		client = { 'client_id':'f7e621c81a2485a4bc70',
+			'client_secret':'fe67f77d4b2c56a38e7e99cc2d6b0720e6b4d4d0'
+		}
+		self.client_app_info = client #MUST be ingested from another file
+		self.user = GithubAPIuser('repotest')
+		self.owner = GithubAPIuser('AutoRepoDuplication')
+		self.owner.username = 'arturops' # MUST be ingested from another file
+		self.user.username = 'arturops' #MUST BE EXTRACTED FROM THE AUTHORIZATION RESPONSE
 
-
-	def __github_url(path):
+	def __github_url(self, path):
 		"""
 		Builds a valid github URL by appending the give path to the standard Github API 
 
@@ -126,7 +152,7 @@ class GithubAPI(API):
 		return GITHUB_API + path
 
 
-	def __get_github_motto():
+	def __get_github_motto(self):
 		"""
 		Test function to connect to the API and ensure Github replies with one of the phrases		
 
@@ -143,7 +169,7 @@ class GithubAPI(API):
 		return str(r.content)
 
 
-	def testAPI():
+	def testAPI(self):
 		"""
 		Displays in stdin a phrase from the selection of Github's list. Uses __get_github_motto
 
@@ -156,12 +182,7 @@ class GithubAPI(API):
 		print('Github phrase:\n\t\t \"{}\"'.format(self.__get_github_motto()))
 
 
-	def check_payload(payload):
-		if self.debug:
-			print(payload)
-		return
-
-	def check_response(method, payload='None', url, response, success_code=None, task_message='' ):
+	def check_response(self, method, payload='None', url, response, success_code=None, task_message='' ):
 		"""
 		Print on the stdout the payload in the request, the type of request and, the response URL, the status 
 		of the response and the content.
@@ -195,7 +216,7 @@ class GithubAPI(API):
 		return
 
 
-	def get_github_auth_url(scope='public_repo'):
+	def get_github_auth_url(self, scope='public_repo'):
 		"""
 		Builds the Github auhorization URL
 
@@ -211,20 +232,19 @@ class GithubAPI(API):
 		return url
 
 
-	def get_auth(code):
+	def get_auth(self, code):
 		"""
 		Exchanges the code given by Github for an access token to a user's Github. The code is given after Github
 		redirects the user to the app specified website once authorization was completed.
 
-		The token is stored in the APIuser.__token member variable. This access token allows an OAuth app to access
-		to a user's Github within the authorized scope.
-		NOTE: This token is used instead of a user's username and password.
-
+		This access token allows an OAuth app to access to a user's Github within the authorized scope.
+		
 		Parameters:
 			code : Github's given code after authorization is completed
 
 		Returns:
-			True if the token was retrieved, otherwise False
+			token : the token that was retrieved
+					NOTE: This token is used instead of a user's username and password, so treated like a password
 
 		"""
 		#payload = client
@@ -237,8 +257,7 @@ class GithubAPI(API):
 		r = requests.post(GITHUB_TOKEN, params=params)
 
 		# init token
-		#token = 0
-
+		token = None
 		if r.status_code >= 400:
 			# Error
 			APIerror('POST {} \nStatus Code: {}'.format(GITHUB_TOKEN, r.status_code))
@@ -246,16 +265,18 @@ class GithubAPI(API):
 			# parse the response for the access_token
 			token_list = r.text.split('&')
 			token = token_list[0].split('=')[1]
-			self.user.set_token( token )
+			
 
 		if self.debug:
 			check_response('POST', params, GITHUB_TOKEN, r)
 
-			#print(self.user.get_token())
-			if self.user.get_token() != self.user.INVALID_TOKEN:
+			if token:
 				print('\n------- SUCCESS getting the token!! ------- ')
 			else:
 				print('\n------- FAILED getting the token!! ------- ')
+
+		return token 
+
 
 		if self.user.get_token() != self.user.INVALID_TOKEN:
 			return True
@@ -263,7 +284,7 @@ class GithubAPI(API):
 			return False
 
 
-	def create_repo(repo_name=TARGET_REPO_NAME):
+	def create_repo(self, repo_name=TARGET_REPO_NAME):
 		"""
 		Creates a public repository in the user's Github. REQUIRES to have a VALID user's TOKEN
 		For more details: https://developer.github.com/v3/repos/#create
@@ -299,7 +320,7 @@ class GithubAPI(API):
 			return False
 
 
-	def get_HEADreference(owner, repo_name=TARGET_REPO_NAME, branch='master'):
+	def get_HEADreference(token=None, owner, repo_name=TARGET_REPO_NAME, branch='master'):
 		"""
 		Retrieves the HEAD reference of the repo_name given and the branch parameter passed. 
 		NOTE: 	Default branch is master. 
@@ -308,6 +329,8 @@ class GithubAPI(API):
 		For more details: https://developer.github.com/v3/git/refs/#get-a-reference
 
 		Parameters:
+			token : The authorization token for the username (owner) passed
+			owner : The username of the user
 			repo_name : Name of the repository to find the reference from in the user's Github
 			NOTE: Default value is TARGET_REPO_NAME from the GithubAPI class
 
@@ -322,9 +345,11 @@ class GithubAPI(API):
 		owner_repo_refs = owner + '/'+ repo_name + '/git/refs/heads/' + branch 
 		url = self.__github_url('user/repos'+owner_repo_refs) #GITHUB_REPOS+owner_repo_refs
 
-		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
+		#headers = { 'Authorization' : 'token {}'.format(token)}
 
-		r = requests.get(url, headers=headers)
+		#r = requests.get(url, headers=headers)
+
+		r = requests.get(url)
 
 		if r.status_code == 201: 
 			# parse response for object url and sha
@@ -505,6 +530,31 @@ class GithubAPI(API):
 		return tree
 
 
+	def convert_to_content_tree(tree):
+		"""
+		Convert a given tree structure that contains only the blobs SHA's into a valid content_tree. The 
+		content tree will use the content field in the HTTP request to add new blobs.
+		This new tree will be posted/created into the user's github repo.
+		In summary, it swaps SHA's for actual file content. This is required for the first commit of files.
+
+		
+
+		"""
+		# 
+		content_tree = []
+		for item in tree:
+			if item['mode'] == '100644':
+				file_path = item['path']
+				blob_sha, blob_content = create_blob(self.user.username, repo_name, file_path, '')
+				if blob_sha != item['sha']:
+					print('\n**********  FILE: {} does NOT have SAME SHA as tree !  ***********\n'.format(file_path))
+				del item['sha']
+				item['content'] = blob_content
+				content_tree.append(item)
+
+		return content_tree
+
+
 	def create_tree(owner, tree, repo_name=TARGET_REPO_NAME, base_tree=None):
 		"""
 		Posts a tree in the user's Github desired repo and gets a response of the posted tree structure 
@@ -621,110 +671,61 @@ class GithubAPI(API):
 			True if the update was succesful, otherwise it returns False
 		"""
 
-		url = GITHUB_API+'repos/{}/{}/git/refs/{}'.format(owner, repo_name, reference)
+		url = self.__github_url('repos/{}/{}/git/refs/{}'.format(owner, repo_name, reference))
+		#GITHUB_API+'repos/{}/{}/git/refs/{}'.format(owner, repo_name, reference)
+
 		payload = { 'sha' : new_sha, 
 					'force' : force_update}
-		token = '8a5f3ffdc47142562f00dc016bacadb0cfbf539d'
-		headers = { 'Authorization' : 'token {}'.format(token)}
+
+		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
 
 		r = requests.patch(url, headers=headers, json=payload)
 
-		print('\nUpdate REFERENCE ------- \n')
-		print(r)
-		print(r.text)
-		print('--------------------------------------------')
-		print(r.json())
+		if self.debug:
+			check_response('PATCH', payload, url, r, 200, ' updating reference !! ' )
 
 		if r.status_code == 200:
 			return	True
 		else:
 			return False 
 
-#--------------------------- maybe not used at all -----------------
-	check_response(method, payload='None', url, response, success_code=None, task_message='' )
+
+	def duplicate_repo(code, origin_branch='master', target_branch='master'):
+		
+		# Get user/client token and create repo
+		self.user.set_token( get_auth(code) )
+		success = create_repo(self.user.repo) #think it should get token
 
 
-	def get_github_auth_url(scope='public_repo'):
-		"""
-		Builds the Github auhorization URL
-
-		Parameters:
-			scope : scopes of the requested authorization on the user's github
-					A list of github scopes can be found here:
-					https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/
-
-		Returns:
-			URL for the login website of Github to give an app authorization
-		"""
-		url = '{}?client_id={}&scope={}'.format(GITHUB_OAUTHS, client['client_id'], 'public_repo')
-		return url
+		# Repo Owner 
+		branch_url, branch_sha = get_HEADreference(self.user.get_token(),
+													self.owner.username, 
+													self.owner.repo, origin_branch)
+		HEAD_tree_url, HEAD_tree_sha = get_commit(branch_url) 
+		target_tree = get_target_tree(self.owner.username,self.owner.repo, HEAD_tree_sha, recursive_tree=True)
+		expected_tree_sha = target_tree['sha']
+		expected_tree = target_tree['tree']
 
 
-client = { 'client_id':'f7e621c81a2485a4bc70',
-			'client_secret':'fe67f77d4b2c56a38e7e99cc2d6b0720e6b4d4d0'
-}
+		# Repo User/Client 
+		branch_url, branch_sha = get_HEADreference(self.user.get_token(),
+													self.user.username, 
+													self.user.repo, target_branch)
+		HEAD_tree_url, HEAD_tree_sha = get_commit(branch_url)
+		content_tree = convert_to_content_tree(expected_tree)
+		# post new tree
+		posted_tree_sha = create_tree(self.user.username, content_tree, self.user.repo)
+		print('Expected sha = new sha ? {}'.format(expected_tree_sha==posted_tree_sha))
+		# create a commit for the tree
+		commit_sha = create_commit(posted_tree_sha, self.user.username, self.user.repo)
+		# update reference
+		reference = 'heads/{}'.format(target_branch)
+		success = update_reference(self.user.username, reference, commit_sha, self.user.repo, force_update=True)
 
-github = GithubAPI(debug=True, client)
+		if success:
+			print(' ----------------- SUCCESS --------------------')
 
-
-
-
-
-def get_user_id(username):
-	resp = requests.get(github_url('users/' + username))
-	#resp = requests.get('https://api.github.com/users/defunkt')
-	if resp.status_code >= 400:
-		# Error
-		raise ApiError('GET /users/ {}'.format(resp.status_code))
-	#for item in resp.json():
-	print('{}'.format(resp.json()))
-	client_id = resp.json()['id']
-	print('client id: {}'.format(client_id))
-	return client_id
-
-
-
-
-def list_repo(token):
-	url = GITHUB_USER_REPOS
-	headers = {'Authorization': 'token {}'.format(token)}
-	r = requests.get(url, headers=headers)
-	print(r)
-	print('\n\n{}\n\n'.format(r.json()))
-	return True
-
-
-
-
-
-
-def get_tree_by_url(tree_url):
-	#https://developer.github.com/v3/git/trees/#get-a-tree
-	print(tree_url)
-	r = requests.get(tree_url)
-	print(r)
-	print(r.json())
-	return
-
-def get_tree_by_sha(owner,repo, tree_sha, recursive_tree=True):
-	#https://developer.github.com/v3/git/trees/#get-a-tree
-	tree_url = GITHUB_API + 'repos/{}/{}/git/trees/{}'.format(owner,repo,tree_sha)
-	if recursive_tree:
-		tree_url = GITHUB_API + 'repos/{}/{}/git/trees/{}?recursive=1'.format(owner,repo,tree_sha)
-	print(tree_url)
-	r = requests.get(tree_url)
-	print(r)
-	print(r.json())
-	print('\n------------------------------------------------------\n')
-	print(r.text.replace('arturops/AutoRepoDuplication','xxx/repotest'))
-	r2 = json.loads(r.text)
-	print('\n------------------------------------------------------\n')
-	print(r2)
-	print(type(r2))
-	sha = r.json()['sha']
-	sha2 = r2['sha']
-	print(sha == sha2)
-	return sha
+		return
 
 
 
@@ -733,89 +734,9 @@ def get_tree_by_sha(owner,repo, tree_sha, recursive_tree=True):
 
 
 
-def try_commit():
-	owner = 'arturops'
-	repo = 'AutoRepoDuplication'
-	# get reference HEAD points to
-	branch_url, branch_sha = get_HEADreference('x', owner, repo, branch='master')
-	# get tree HEAD points to
-	HEAD_tree_url, HEAD_tree_sha = get_commit(branch_url)
-	file_path = ''
-	file = 'autorepo.py'
-	#blob_sha = create_blob(owner, repo, file_path, file, False)
-	blob_sha = '4aa5f1111a60e3db06877304e58ed76dc673e2af'
-	#get_tree_by_url(HEAD_tree_url)
-	#get_tree_by_sha(owner,repo, HEAD_tree_sha)
-	target_tree = get_target_tree(owner,repo, HEAD_tree_sha, recursive_tree=True)
-	expected_tree_sha = target_tree['sha']
-	new_tree = target_tree['tree']
-
-	
-	owner = 'arturops'
-	repo = 'repotest'
-	# get reference HEAD points to
-	branch_url, branch_sha = get_HEADreference('x', owner, repo, branch='master')
-	# get tree HEAD points to
-	HEAD_tree_url, HEAD_tree_sha = get_commit(branch_url)
-
-	# convert new_tree into a valid new_tree [need to swap sha for content as it is the first commit of these files]
-	post_tree = []
-	for item in new_tree:
-		if item['mode'] == '100644':
-			file_path = item['path']
-			blob_sha, blob_content = create_blob(owner, repo, file_path, '')
-			if blob_sha != item['sha']:
-				print('\n**********  FILE: {} does NOT have SAME SHA as tree !  ***********\n'.format(file_path))
-			del item['sha']
-			item['content'] = blob_content
-			post_tree.append(item)
-
-	print('\n------------- NEW TREE ------------------------')
-	for i in new_tree:
-		print(i['type'], i['path'] )
-	print()
-	print('\n------------- POST TREE ------------------------')
-	for i in post_tree:
-		print(i['type'], i['path'] )
-	print()
-
-	# post new tree
-	new_tree_sha = create_tree(owner, repo, HEAD_tree_sha, post_tree)
-
-	print('Expected sha = new sha ? {}'.format(expected_tree_sha==new_tree_sha))
-
-	# create a commit for the tree
-	commit_sha = create_commit(owner, repo, HEAD_tree_sha, new_tree_sha)
-
-	reference = 'heads/master'
-
-	success = update_reference(owner, repo, reference, commit_sha)
-
-	if success:
-		print(' ----------------- SUCCESS --------------------')
-
-	return
 
 
 
 
-def test():
-	get_github_motto()
-
-
-
-def run():
-	username = 'arturops'
-	get_github_motto()
-	print()
-	client_id = get_user_id(username)
-	print('\n\nclient_id (main) :{}\n\n'.format(client_id))
-	#token = get_user_auth(username)
-	#print('\n\ntoken (main) :{}\n\n'.format(token))
-	#client_id = 'f7e621c81a2485a4bc70'
-	print('\n\nclient_id (github) :{}\n\n'.format(client_id))
-	web_auth_str = get_auth(client_id)
-	#web_auth_str = 'https://github.com/login/oauth/authorize?client_id={}'.format(client_id)
-	return web_auth_str
 
 
