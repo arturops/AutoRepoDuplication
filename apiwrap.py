@@ -5,7 +5,7 @@ import json
 
 class APIuser():
 
-	INVALID_TOKEN = 'Unknown'
+	#INVALID_TOKEN = 'Unknown'
 
 	def __init__(self):
 		"""
@@ -18,7 +18,7 @@ class APIuser():
 			None
 		"""
 		self.username = ''
-		self.__token = INVALID_TOKEN
+		self.__token = 'Unknown'
 
 
 	def set_token(self, token):
@@ -61,7 +61,7 @@ class GithubAPIuser(APIuser):
 		Returns:
 			None
 		"""
-		APIuser.__init()
+		APIuser.__init__(self)
 		self.repo = repo
 
 
@@ -125,7 +125,7 @@ class GithubAPI(API):
 		Returns:
 			None
 		"""
-		API.__init__(debug)
+		API.__init__(self, debug=debug)
 		client = { 'client_id':'f7e621c81a2485a4bc70',
 			'client_secret':'fe67f77d4b2c56a38e7e99cc2d6b0720e6b4d4d0'
 		}

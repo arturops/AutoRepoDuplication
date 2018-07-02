@@ -67,7 +67,7 @@ def access():
 
 
 		github = apiwrap.GithubAPI(debug=True)
-		print( github.test() )
+		print( github.testAPI() )
 		return redirect(github.get_github_auth_url())
 		#return redirect('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
 
