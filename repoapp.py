@@ -11,7 +11,7 @@ import apiwrap
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = '2aba1f6ebe92e925ec34c8486003cf08'
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 
 @app.route('/')
 @app.route('/home')
@@ -24,8 +24,8 @@ def about():
 	version = {
 		'author' : 'Arturo Parrales Salinas',
 		'title' : 'Auto Repo Duplication App',
-		'ver' : '0.0.0.1',
-		'date' : 'June 25, 2018'
+		'ver' : '0.0.0.2',
+		'date' : 'July 2, 2018'
 	}
 
 	return render_template('about.html', title='About', version=version)
