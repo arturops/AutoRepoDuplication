@@ -165,7 +165,7 @@ class GithubAPI(API):
 		r = requests.get(self.__github_url('zen'))
 		if r.status_code >= 400:
 			# Error
-			APIerror('GET /zen {}'.format(resp.status_code))
+			self.APIerror('GET /zen {}'.format(resp.status_code))
 		return str(r.text)
 
 
@@ -260,7 +260,7 @@ class GithubAPI(API):
 		token = None
 		if r.status_code >= 400:
 			# Error
-			APIerror('POST {} \nStatus Code: {}'.format(self.GITHUB_TOKEN, r.status_code))
+			self.APIerror('POST {} \nStatus Code: {}'.format(self.GITHUB_TOKEN, r.status_code))
 		else:
 			# parse the response for the access_token
 			token_list = r.text.split('&')
@@ -442,7 +442,7 @@ class GithubAPI(API):
 		url = self.__github_url('repos/{}/{}/git/blobs'.format(owner,repo_name)) 
 		#GITHUB_API + 'repos/{}/{}/git/blobs'.format(owner,repo)
 
-		content =  get_file_content(file_path, file)
+		content =  self.get_file_content(file_path, file)
 		
 
 		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
@@ -548,7 +548,7 @@ class GithubAPI(API):
 		for item in tree:
 			if item['mode'] == '100644':
 				file_path = item['path']
-				blob_sha, blob_content = create_blob(self.user.username, file_path, '', self.user.repo)
+				blob_sha, blob_content = self.create_blob(self.user.username, file_path, '', self.user.repo)
 				if blob_sha != item['sha']:
 					print('\n**********  FILE: {} does NOT have SAME SHA as tree !  ***********\n'.format(file_path))
 				del item['sha']
@@ -696,34 +696,34 @@ class GithubAPI(API):
 	def duplicate_repo(self, code, origin_branch='master', target_branch='master'):
 		
 		# Get user/client token and create repo
-		self.user.set_token( get_auth(code) )
-		success = create_repo(self.user.repo) #think it should get token
+		self.user.set_token( self.get_auth(code) )
+		success = self.create_repo(self.user.repo) #think it should get token
 
 
 		# Repo Owner 
-		branch_url, branch_sha = get_HEADreference(self.user.get_token(),
+		branch_url, branch_sha = self.get_HEADreference(self.user.get_token(),
 													self.owner.username, 
 													self.owner.repo, origin_branch)
-		HEAD_tree_url, HEAD_tree_sha = get_commit(branch_url) 
-		target_tree = get_target_tree(self.owner.username, HEAD_tree_sha, self.owner.repo, recursive_tree=True)
+		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url) 
+		target_tree = self.get_target_tree(self.owner.username, HEAD_tree_sha, self.owner.repo, recursive_tree=True)
 		expected_tree_sha = target_tree['sha']
 		expected_tree = target_tree['tree']
 
 
 		# Repo User/Client 
-		branch_url, branch_sha = get_HEADreference(self.user.get_token(),
+		branch_url, branch_sha = self.get_HEADreference(self.user.get_token(),
 													self.user.username, 
 													self.user.repo, target_branch)
-		HEAD_tree_url, HEAD_tree_sha = get_commit(branch_url)
-		content_tree = convert_to_content_tree(expected_tree)
+		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url)
+		content_tree = self.convert_to_content_tree(expected_tree)
 		# post new tree
-		posted_tree_sha = create_tree(self.user.username, content_tree, self.user.repo)
+		posted_tree_sha = self.create_tree(self.user.username, content_tree, self.user.repo)
 		print('Expected sha = new sha ? {}'.format(expected_tree_sha==posted_tree_sha))
 		# create a commit for the tree
-		commit_sha = create_commit(posted_tree_sha, self.user.username, self.user.repo)
+		commit_sha = self.create_commit(posted_tree_sha, self.user.username, self.user.repo)
 		# update reference
 		reference = 'heads/{}'.format(target_branch)
-		success = update_reference(self.user.username, reference, commit_sha, self.user.repo, force_update=True)
+		success = self.update_reference(self.user.username, reference, commit_sha, self.user.repo, force_update=True)
 
 		if success:
 			print(' ----------------- SUCCESS --------------------')
