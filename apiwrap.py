@@ -345,11 +345,11 @@ class GithubAPI(API):
 		owner_repo_refs = owner + '/'+ repo_name + '/git/refs/heads/' + branch 
 		url = self.__github_url('user/repos/'+owner_repo_refs) #GITHUB_REPOS+owner_repo_refs
 
-		#headers = { 'Authorization' : 'token {}'.format(token)}
+		headers = { 'Authorization' : 'token {}'.format(token)}
 
-		#r = requests.get(url, headers=headers)
+		r = requests.get(url, headers=headers)
 
-		r = requests.get(url)
+		#r = requests.get(url)
 
 		if r.status_code == 201: 
 			# parse response for object url and sha
