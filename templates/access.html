@@ -7,37 +7,7 @@
 		<div class="content-section">
 			<form method="POST" action="">
 					{{ form.hidden_tag() }}
-					<fieldset class="form-group">
-						<legend class="border-bottom mb-4">Github Information</legend>
-						<div class="form-group">
-							{{ form.github_username.label(class="form-control-label") }}
-
-							{% if form.github_username.errors %}
-								{{ form.github_username(class="form-control is-invalid") }}
-								<div class="invalid-feedback">
-									{% for error in form.github_username.errors %}
-										<span>{{ error }}</span>
-									{% endfor %}
-								</div>
-							{% else %}
-								{{ form.github_username(class="form-control") }}
-							{% endif %}
-							<small class="form-text text-muted">We'll never share your github username with anyone else.</small>
-						</div>
-						<div class="form-group">
-							{{ form.target_repo.label(class="form-control-label") }}
-							{% if form.target_repo.errors %}
-								{{ form.target_repo(class="form-control is-invalid") }}
-								<div class="invalid-feedback">
-									{% for error in form.target_repo.errors %}
-										<span>{{ error }}</span>
-									{% endfor %}
-								</div>
-							{% else %}
-								{{ form.target_repo(class="form-control") }}
-							{% endif %}
-						</div>
-					</fieldset>
+					<legend class="border-bottom mb-4">Github Auto Duplicative App</legend>
 					<div class="form-group">
 						{{ form.submit(class="btn btn-outline-info") }}
 					</div>
@@ -45,7 +15,7 @@
 		</div>
 		<div class="border-top pt-3">
 			<small class="text-muted">
-				Already have the App? <a class="ml-2" href="{{ url_for('home') }}">Check Documentation</a>
+				Already have the App? <a class="ml-2" href="{{ url_for('docs') }}">Check Documentation</a>
 			</small>
 		</div>
 	</div>
