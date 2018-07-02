@@ -32,27 +32,13 @@ def about():
 		'date' : 'June 25, 2018'
 	}
 
-	
-	if request.method == 'GET':
-		
-		if 'code' in request.args:
-			#print(request)
-			
-			print('\n\n{}\n\n'.format(request.args))
-			code = request.args['code']
-			print('\n\n{}\n\n'.format(code))
-			github = apiwrap.GithubAPI(debug=True)
-			success_repo = github.duplicate_repo(code)
-			#print('FLASK SIDE --- TOKEN {}'.format(token))
-			#success_repo = apiwrap.create_repo(token)
-
-			if success_repo:
-				print(' ----- ALL SET!! ------ ')
-			#	success_str = 'Repo has been created! Thanks!'
-			#	flash(success_str,'success')
-
-
 	return render_template('about.html', title='About', version=version)
+
+
+@app.route('/docs')
+def docs():
+	github = apiwrap.GithubAPI(debug=app.debug)
+	return redirect('https://github.com/{}/{}'.format(github.owner.username, github.owner.repo))
 
 
 @app.route('/access',methods=['GET','POST'])
@@ -60,28 +46,57 @@ def access():
 	form = GithubUserForm()
 	if form.validate_on_submit():
 		
-		repo = 'https://github.com/{}/{}'.format(form.github_username.data, form.target_repo.data)
-		success_str = 'Repo {} has been created! Thanks {}!'.format(repo,form.github_username.data)
-		flash(success_str,'success')
-		flash(repo,'success')
+		#repo = 'https://github.com/{}/{}'.format(form.github_username.data, form.target_repo.data)
+		#success_str = 'Repo {} has been created! Thanks {}!'.format(repo,form.github_username.data)
+		#flash(success_str,'success')
+		#flash(repo,'success')
 
 
-		github = apiwrap.GithubAPI(debug=True)
-		print( github.testAPI() )
+		github = apiwrap.GithubAPI(debug=app.debug)
+		#print( github.testAPI() )
 		return redirect(github.get_github_auth_url())
-		#return redirect('https://github.com/login/oauth/authorize?client_id=f7e621c81a2485a4bc70')
 
 	return render_template('access.html',title='User', form=form)
 
 
+@app.route('/done')
+def done():
+
+	username = ''
+	repo = ''
+	if request.method == 'GET':
+		
+		if 'code' in request.args:
+
+			code = request.args['code']
+			
+			github = apiwrap.GithubAPI(debug=app.debug)
+			success_repo = github.duplicate_repo(code)
+
+			if success_repo:
+				print(' ----- ALL SET!! ------ ')
+				username = github.user.username
+				repo = github.user.repo
+				success_str = 'Successful Repo Duplication! Thanks!'
+				flash(success_str,'success')
+
+				return render_template('thanks.html', title='Thanks', username=username, repo=repo)		
+
+	danger_str = 'Failure duplicating the repo! Sorry!'
+	flash(danger_str,'danger')
+	return render_template('fail.html', title='Ooops')
+
+
+
+# Handles page not found
 @app.errorhandler(404)
 def page_not_found(e):
 	return render_template('404.html'),404
 
-
+# Handles Server Internal errors
 @app.errorhandler(500)
 def server_error(e):
-	return render_template('404.html'),500
+	return render_template('500.html'),500
 
 
 @app.route('/list')

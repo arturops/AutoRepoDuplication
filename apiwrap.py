@@ -1,6 +1,5 @@
 
 import requests
-import base64
 import json
 
 class APIuser():
@@ -133,7 +132,7 @@ class GithubAPI(API):
 		self.user = GithubAPIuser('repotest')
 		self.owner = GithubAPIuser('AutoRepoDuplication')
 		self.owner.username = 'arturops' # MUST be ingested from another file
-		self.user.username = 'arturopsx' #MUST BE EXTRACTED FROM THE AUTHORIZATION RESPONSE
+		self.user.username = 'Unknownn' #Extracted after authorization token is obtained
 
 	def __github_url(self, path):
 		"""
@@ -694,7 +693,16 @@ class GithubAPI(API):
 
 
 	def get_user_username(self):
+		"""
+		Retrieves the username of a user that has given the app an authorization 
 
+		Parameters:
+			None
+
+		Returns:
+			True if it was able to get a succesful response from which it got the username
+
+		"""
 		url = self.__github_url('user')
 
 		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
@@ -703,13 +711,25 @@ class GithubAPI(API):
 
 		if r.status_code == 200:
 			self.user.username = r.json()['login']
-			print('\n\nUSERNAME of user: {}\n\n'.format(self.user.username))
+			return True
+		else:
+			return False
 
-
-		return True
 
 	def duplicate_repo(self, code, origin_branch='master', target_branch='master'):
-		
+		"""
+		Uses several methods from the GithubAPI class to copy a repo from an owner to the user that
+		authorize the app.
+
+		Parameters:
+			code : is a code that Github returns after a user authorized the app access to his/her github
+			origin_branch : is the branch of the owner that will be copied
+			target_branch : is the branc of the user in which the owner repo will be copied
+
+		Returns:
+			True if it the update reference was succesful, which will imply the repo got copied soccessfully
+
+		"""
 		# Get user/client token and create repo
 		self.user.set_token( self.get_auth(code) )
 		success = self.create_repo(self.user.repo) #think it should get token
@@ -742,12 +762,10 @@ class GithubAPI(API):
 
 		if success:
 			print(' ----------------- SUCCESS --------------------')
+			print('OWNER {}'.format(self.owner.username))
+			print('USER {}'.format(self.user.username))
 
-
-		print('OWNER {}'.format(self.owner.username))
-		print('USER {}'.format(self.user.username))
-
-		return
+		return success
 
 
 
