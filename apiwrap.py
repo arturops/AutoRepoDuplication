@@ -677,7 +677,7 @@ class GithubAPI(API):
 		url = self.__github_url('repos/{}/{}/git/refs/{}'.format(owner, repo_name, reference))
 		#GITHUB_API+'repos/{}/{}/git/refs/{}'.format(owner, repo_name, reference)
 
-		payload = { 'sha' : new_sha, 
+		payload = { 'sha' : new_commit_sha, 
 					'force' : force_update}
 
 		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
