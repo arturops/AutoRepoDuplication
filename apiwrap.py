@@ -351,19 +351,19 @@ class GithubAPI(API):
 
 		r = requests.get(url)
 
-		if r.status_code == 201: 
+		if r.status_code == 200: 
 			# parse response for object url and sha
 			rjson = r.json()
 			branch_url, branch_sha = rjson['object']['url'],rjson['object']['sha']
 		else:
-			branch_url, branch_sha = '',''
+			branch_url, branch_sha = None, None
 
 		
 		if self.debug:
-			if r.status_code == 201: 
+			if r.status_code == 200: 
 				print('\nreference URL: {}\nreference SHA: {}\n'.format(branch_url, branch_sha))
 
-			self.check_response('GET', url, r, 'None', 201, ' retrieving reference!! ')
+			self.check_response('GET', url, r, 'None', 200, ' retrieving reference!! ')
 
 		return branch_url, branch_sha
 
