@@ -37,7 +37,7 @@ def about():
 
 @app.route('/docs')
 def docs():
-	github = apiwrap.GithubAPI(debug=app.debug)
+	github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
 	return redirect('https://github.com/{}/{}'.format(github.owner.username, github.owner.repo))
 
 
@@ -52,7 +52,7 @@ def access():
 		#flash(repo,'success')
 
 
-		github = apiwrap.GithubAPI(debug=app.debug)
+		github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
 		#print( github.testAPI() )
 		return redirect(github.get_github_auth_url())
 
@@ -70,7 +70,7 @@ def done():
 
 			code = request.args['code']
 			
-			github = apiwrap.GithubAPI(debug=app.debug)
+			github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
 			success_repo = github.duplicate_repo(code)
 
 			if success_repo:
@@ -98,21 +98,6 @@ def page_not_found(e):
 def server_error(e):
 	return render_template('500.html'),500
 
-
-@app.route('/list')
-def list():
-	os.system('mkdir temp')
-	f = []
-	for root, dirs, files in os.walk("."):
-		for folder in dirs:
-			if folder == 'temp':
-				print('Removing temp folder')
-				os.system('rm -r temp')
-		for file in files:
-			print(file)
-			f.append(file)
-	f.append("Done")
-	return '<h1>{}</h1><br /><h2>{}</h2>'.format(f[0],f[-1])
 
 # To run in debug mode
 if __name__ == '__main__':
