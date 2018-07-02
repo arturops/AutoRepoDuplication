@@ -136,7 +136,7 @@ class GithubAPI(API):
 		with open('owner_info.txt') as json_file:  
     		owner_info = json.load(json_file)
 		self.owner = GithubAPIuser('AutoRepoDuplication')
-		self.owner.username = owner_info['owner']['username'] # MUST be ingested from another file
+		self.owner.username = owner_info['owner_username'] # MUST be ingested from another file
 		self.client_app_info = owner_info['app'] #MUST be ingested from another file
 
 		#self.owner = GithubAPIuser('AutoRepoDuplication')
@@ -515,7 +515,9 @@ class GithubAPI(API):
 			del tree['url']
 			del tree['truncated']
 			# remove any tree element, it will be infered by the 'path' of blobs
-			tree['tree'][:] = [item for item in tree['tree'] if item['type'] != 'tree']
+			# remove also the owner_info file so that credentials are not distributed to next users
+			tree['tree'][:] = [item for item in tree['tree'] if item['type'] != 'tree'\
+															 and item['path'] != 'owner_info.txt']
 			
 			# clean blobs
 			for element in tree['tree']:
