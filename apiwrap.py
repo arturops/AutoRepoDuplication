@@ -133,7 +133,7 @@ class GithubAPI(API):
 		self.user = GithubAPIuser('repotest')
 		self.owner = GithubAPIuser('AutoRepoDuplication')
 		self.owner.username = 'arturops' # MUST be ingested from another file
-		self.user.username = 'arturops' #MUST BE EXTRACTED FROM THE AUTHORIZATION RESPONSE
+		self.user.username = 'arturopsx' #MUST BE EXTRACTED FROM THE AUTHORIZATION RESPONSE
 
 	def __github_url(self, path):
 		"""
@@ -693,12 +693,27 @@ class GithubAPI(API):
 			return False 
 
 
+	def get_user_username(self):
+
+		url = self.__github_url('user')
+
+		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
+
+		r = requests.get(url, headers=headers)
+
+		if r.status_code == 200:
+			self.user.username = r.json()['login']
+			print('\n\nUSERNAME of user: {}\n\n'.format(self.user.username))
+
+
+		return True
+
 	def duplicate_repo(self, code, origin_branch='master', target_branch='master'):
 		
 		# Get user/client token and create repo
 		self.user.set_token( self.get_auth(code) )
 		success = self.create_repo(self.user.repo) #think it should get token
-
+		success = self.get_user_username()
 
 		# Repo Owner 
 		branch_url, branch_sha = self.get_HEADreference(self.user.get_token(),
@@ -727,6 +742,10 @@ class GithubAPI(API):
 
 		if success:
 			print(' ----------------- SUCCESS --------------------')
+
+
+		print('OWNER {}'.format(self.owner.username))
+		print('USER {}'.format(self.user.username))
 
 		return
 
