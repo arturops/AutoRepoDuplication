@@ -133,8 +133,8 @@ class GithubAPI(API):
 		self.user.username = 'Unknownn' #Extracted after authorization token is obtained
 
 		# read owner_info
-		with open('owner_info.txt') as json_file:  
-    		owner_info = json.load(json_file)
+		with open('owner_info.txt') as json_file:
+			owner_info = json.load(json_file)
 		self.owner = GithubAPIuser('AutoRepoDuplication')
 		self.owner.username = owner_info['owner_username'] # MUST be ingested from another file
 		self.client_app_info = owner_info['app'] #MUST be ingested from another file
