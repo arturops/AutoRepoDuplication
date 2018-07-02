@@ -5,7 +5,7 @@ import json
 
 class APIuser():
 
-	#INVALID_TOKEN = 'Unknown'
+	INVALID_TOKEN = 'Unknown'
 
 	def __init__(self):
 		"""
@@ -18,7 +18,7 @@ class APIuser():
 			None
 		"""
 		self.username = ''
-		self.__token = 'Unknown'
+		self.__token = self.INVALID_TOKEN
 
 
 	def set_token(self, token):
@@ -149,7 +149,7 @@ class GithubAPI(API):
 			path = 'zen'
 			return 'https://api.github.com/zen'
 		"""
-		return GITHUB_API + path
+		return self.GITHUB_API + path
 
 
 	def __get_github_motto(self):
@@ -166,7 +166,7 @@ class GithubAPI(API):
 		if r.status_code >= 400:
 			# Error
 			APIerror('GET /zen {}'.format(resp.status_code))
-		return str(r.content)
+		return str(r.text)
 
 
 	def testAPI(self):
@@ -228,7 +228,7 @@ class GithubAPI(API):
 		Returns:
 			URL for the login website of Github to give an app authorization
 		"""
-		url = '{}?client_id={}&scope={}'.format(GITHUB_OAUTHS, self.client_app_info['client_id'], scope)
+		url = '{}?client_id={}&scope={}'.format(self.GITHUB_OAUTHS, self.client_app_info['client_id'], scope)
 		return url
 
 
@@ -254,13 +254,13 @@ class GithubAPI(API):
 		params = self.client_app_info
 		params['code'] = code
 
-		r = requests.post(GITHUB_TOKEN, params=params)
+		r = requests.post(self.GITHUB_TOKEN, params=params)
 
 		# init token
 		token = None
 		if r.status_code >= 400:
 			# Error
-			APIerror('POST {} \nStatus Code: {}'.format(GITHUB_TOKEN, r.status_code))
+			APIerror('POST {} \nStatus Code: {}'.format(self.GITHUB_TOKEN, r.status_code))
 		else:
 			# parse the response for the access_token
 			token_list = r.text.split('&')
@@ -268,7 +268,7 @@ class GithubAPI(API):
 			
 
 		if self.debug:
-			check_response('POST', GITHUB_TOKEN, r, params)
+			self.check_response('POST', self.GITHUB_TOKEN, r, params)
 
 			if token:
 				print('\n------- SUCCESS getting the token!! ------- ')
@@ -312,7 +312,7 @@ class GithubAPI(API):
 		r = requests.post(url,headers=headers, json=data)
 		
 		if self.debug:
-			check_response('POST', url, r, data, 201, ' creating repo!! ')
+			self.check_response('POST', url, r, data, 201, ' creating repo!! ')
 
 		if r.status_code == 201: 
 			return True
@@ -343,7 +343,7 @@ class GithubAPI(API):
 		"""
 		
 		owner_repo_refs = owner + '/'+ repo_name + '/git/refs/heads/' + branch 
-		url = self.__github_url('user/repos'+owner_repo_refs) #GITHUB_REPOS+owner_repo_refs
+		url = self.__github_url('user/repos/'+owner_repo_refs) #GITHUB_REPOS+owner_repo_refs
 
 		#headers = { 'Authorization' : 'token {}'.format(token)}
 
@@ -363,8 +363,7 @@ class GithubAPI(API):
 			if r.status_code == 201: 
 				print('\nreference URL: {}\nreference SHA: {}\n'.format(branch_url, branch_sha))
 
-			check_response('GET', url, r, 'None', 201, ' retrieving reference!! ')
-
+			self.check_response('GET', url, r, 'None', 201, ' retrieving reference!! ')
 
 		return branch_url, branch_sha
 
@@ -395,7 +394,7 @@ class GithubAPI(API):
 			if r.status_code == 200: 
 				print('\ntree reference URL: {}\ntree reference SHA: {}\n'.format(tree_url, tree_sha))
 
-			check_response('GET', commit_reference_url, r, 'None', 200, ' retrieving tree reference!! ')
+			self.check_response('GET', commit_reference_url, r, 'None', 200, ' retrieving tree reference!! ')
 			
 		return tree_url, tree_sha
 
@@ -463,7 +462,7 @@ class GithubAPI(API):
 			if r.status_code == 201: 
 				print('Blob SHA {}'.format(sha))
 
-			check_response('POST', url, r, payload, 201, ' creating blob!! ')
+			self.check_response('POST', url, r, payload, 201, ' creating blob!! ')
 
 		
 		if return_content:
@@ -525,7 +524,7 @@ class GithubAPI(API):
 				print(tree)
 				print('\n-------------------------------------------------------------------------\n')
 
-			check_response('GET', url, r, params, 200, 'retrieving target tree !! ')
+			self.check_response('GET', url, r, params, 200, 'retrieving target tree !! ')
 
 		return tree
 
@@ -597,7 +596,7 @@ class GithubAPI(API):
 			posted_tree_sha	= r.json()['sha']
 
 		if self.debug:
-			check_response('POST', url, r, payload, 201, ' posting the tree !!')
+			self.check_response('POST', url, r, payload, 201, ' posting the tree !!')
 
 		return posted_tree_sha
 
@@ -650,7 +649,7 @@ class GithubAPI(API):
 
 		if self.debug:
 			print('\nCommit SHA: {}'.format(commit_sha))
-			check_response('POST', url, r, payload, 201, ' creating commit !! ')		
+			self.check_response('POST', url, r, payload, 201, ' creating commit !! ')		
 
 		return commit_sha
 
@@ -686,7 +685,7 @@ class GithubAPI(API):
 		r = requests.patch(url, headers=headers, json=payload)
 
 		if self.debug:
-			check_response('PATCH', url, r, payload, 200, ' updating reference !! ' )
+			self.check_response('PATCH', url, r, payload, 200, ' updating reference !! ' )
 
 		if r.status_code == 200:
 			return	True
