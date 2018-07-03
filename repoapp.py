@@ -6,12 +6,12 @@
 from flask import Flask, render_template, url_for, flash, redirect, request
 from forms import GithubUserForm
 import apiwrap
-
+import mistune
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = '2aba1f6ebe92e925ec34c8486003cf08'
-app.config['DEBUG'] = False
+app.config['DEBUG'] = True
 
 @app.route('/')
 @app.route('/home')
@@ -33,9 +33,13 @@ def about():
 
 @app.route('/docs')
 def docs():
-	github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
-	return redirect('https://github.com/{}/{}'.format(github.owner.username, github.owner.repo))
-
+	#github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
+	#return redirect('https://github.com/{}/{}'.format(github.owner.username, github.owner.repo))
+	markdown = mistune.Markdown(escape=True, hard_wrap=True)
+	with open('README.md', 'r') as content_file:
+			content = content_file.read()
+	markup_html = markdown(content)
+	return render_template('install.html', title='Installation', markup_html=markup_html)
 
 @app.route('/access',methods=['GET','POST'])
 def access():
