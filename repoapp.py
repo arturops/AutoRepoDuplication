@@ -15,7 +15,7 @@ app.config['DEBUG'] = False
 
 
 github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
-expected_tree = github.get_owner_repo_tree()
+#expected_tree = github.get_owner_repo_tree()
 
 
 @app.route('/')
@@ -78,8 +78,8 @@ def done():
 			code = request.args['code']
 			
 			#github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
-			#success_repo = github.duplicate_repo(code)
-			success_repo = github.commit_repo(code, expected_tree, target_branch='master')
+			success_repo = github.duplicate_repo(code)
+			#success_repo = github.commit_repo(code, expected_tree, target_branch='master')
 
 			if success_repo:
 				username = github.user.username

@@ -749,11 +749,7 @@ class GithubAPI(API):
 			True if it the update reference was succesful, which will imply the repo got copied soccessfully
 
 		"""
-		# Get user/client token and create repo
-		self.user.set_token( self.get_auth(code) )
-		success = self.create_repo(self.user.repo) #think it should get token
-		success = self.get_user_username()
-
+		
 		# Repo Owner 
 		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
 													self.owner.repo, origin_branch)
@@ -763,7 +759,11 @@ class GithubAPI(API):
 		expected_tree = target_tree['tree']
 
 
-		# Repo User/Client 
+		# Get user/client token and create repo
+		self.user.set_token( self.get_auth(code) )
+		success = self.create_repo(self.user.repo) #think it should get token
+		success = self.get_user_username()
+ 
 		branch_url, branch_sha = self.get_HEADreference(self.user.username, 
 													self.user.repo, target_branch,
 													self.user.get_token())
