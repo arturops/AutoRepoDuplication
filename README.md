@@ -107,6 +107,7 @@ You can copy the structure above and paste it in ```owner_info.txt```. Then, rep
 
 Save the file again and commit it to your Github repo.
 **Note: Stay on the *master* branch**
+**Note:** The app doesn’t copy from the owner's repo the ```owner_info.txt``` file into the user’s repo as this file contains the owner's credentials (keep them safe)
 
 ### Update Deployment in Heroku
 --------------------------
