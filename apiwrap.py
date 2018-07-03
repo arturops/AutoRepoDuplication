@@ -786,8 +786,60 @@ class GithubAPI(API):
 		return success
 
 
+	def get_owner_repo_tree(self, origin_branch='master'):
+
+		# Repo Owner 
+		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
+													self.owner.repo, origin_branch)
+		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url) 
+		target_tree = self.get_target_tree(self.owner.username, HEAD_tree_sha,
+											 self.owner.repo, recursive_tree=True)
+
+		expected_tree = target_tree['tree']
+
+		return expected_tree
 
 
+	def commit_repo(self, code, expected_tree, target_branch='master'):
+		"""
+		Uses several methods from the GithubAPI class to commit a repo from an owner's tree to the user that
+		authorize the app.
+
+		Parameters:
+			code : is a code that Github returns after a user authorized the app access to his/her github
+			expected_tree: tree to commit to the repo
+			target_branch : is the branc of the user in which the owner repo will be copied
+
+		Returns:
+			True if it the update reference was succesful, which will imply the repo got copied soccessfully
+
+		"""
+		# Get user/client token and create repo
+		self.user.set_token( self.get_auth(code) )
+		success = self.create_repo(self.user.repo)
+		success = self.get_user_username()
+
+
+		# Repo User/Client 
+		branch_url, branch_sha = self.get_HEADreference(self.user.username, 
+													self.user.repo, target_branch,
+													self.user.get_token())
+		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url, self.user.get_token())
+		content_tree = self.convert_to_content_tree(expected_tree)
+		# post new tree
+		posted_tree_sha = self.create_tree(self.user.username, content_tree, self.user.repo)
+		# create a commit for the tree
+		commit_sha = self.create_commit(posted_tree_sha, self.user.username, self.user.repo)
+		# update reference
+		reference = 'heads/{}'.format(target_branch)
+		success = self.update_reference(self.user.username, reference, commit_sha, self.user.repo, force_update=True)
+
+		if success:
+			print(' ----------------- SUCCESS --------------------')
+			print('OWNER {}'.format(self.owner.username))
+			print('USER {}'.format(self.user.username))
+
+		return success
 
 
 

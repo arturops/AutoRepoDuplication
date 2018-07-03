@@ -13,6 +13,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = '2aba1f6ebe92e925ec34c8486003cf08'
 app.config['DEBUG'] = True
 
+
+github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
+expected_tree = github.get_owner_repo_tree()
+
+
 @app.route('/')
 @app.route('/home')
 def home():
@@ -54,7 +59,7 @@ def access():
 	form = GithubUserForm()
 	if form.validate_on_submit():
 
-		github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
+		#github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
 		#print( github.testAPI() )
 		return redirect(github.get_github_auth_url())
 
@@ -72,8 +77,9 @@ def done():
 
 			code = request.args['code']
 			
-			github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
-			success_repo = github.duplicate_repo(code)
+			#github = apiwrap.GithubAPI(debug=app.config['DEBUG'])
+			#success_repo = github.duplicate_repo(code)
+			success_repo = github.commit_repo(code, expected_tree, target_branch='master')
 
 			if success_repo:
 				username = github.user.username
