@@ -322,7 +322,7 @@ class GithubAPI(API):
 			return False
 
 
-	def get_HEADreference(self, owner, repo_name=TARGET_REPO_NAME, branch='master'):
+	def get_HEADreference(self, owner, repo_name=TARGET_REPO_NAME, branch='master', token=None):
 		"""
 		Retrieves the HEAD reference of the repo_name given and the branch parameter passed. 
 		NOTE: 	Default branch is master. 
@@ -338,6 +338,8 @@ class GithubAPI(API):
 			branch: Branch in the repo_name to find the reference from in the user's Github
 			NOTE: Default branch is master. 
 
+			token : access token to give authorization
+
 		Returns:
 			branch_url : Github's url where the branch reference is located
 			branch_sha : SHA of the branch
@@ -346,8 +348,13 @@ class GithubAPI(API):
 		owner_repo_refs = owner + '/'+ repo_name + '/git/refs/heads/' + branch 
 		url = self.__github_url('repos/'+owner_repo_refs) 
 
+		headers = { 'Authorization' : 'token {}'.format(token)}
 
-		r = requests.get(url)
+
+		if token:
+			r = requests.get(url, headers=headers)
+		else:
+			r = requests.get(url, params=self.client_app_info)
 
 		if r.status_code == 200: 
 			# parse response for object url and sha
@@ -367,20 +374,27 @@ class GithubAPI(API):
 
 
 
-	def get_commit(self, commit_reference_url):
+	def get_commit(self, commit_reference_url, token=None):
 		"""
 		Retrieves a commit's reference tree of the given url. 
 		For more details: https://developer.github.com/v3/git/commits/#response
 
 		Parameters:
 			commit_reference_url : URL reference from which to retrieve a tree
+			token : access token of a user. Default is None as this call does not required a token
 
 		Returns:
 			tree_url : Github's url where the tree reference is located
 			tree_sha : SHA of the tree
 		"""
 
-		r = requests.get(commit_reference_url)
+		headers = { 'Authorization' : 'token {}'.format(token)}
+
+		if token:
+			r = requests.get(commit_reference_url, headers=headers)
+		else:
+			r = requests.get(commit_reference_url, params=self.client_app_info)
+		
 		
 		if r.status_code == 200: 
 			tree_url, tree_sha = r.json()['tree']['url'],r.json()['tree']['sha']
@@ -495,7 +509,9 @@ class GithubAPI(API):
 		if recursive_tree:
 			r = requests.get(url, params=params)
 		else:
-			r = requests.get(url)
+			params = self.client_app_info
+			params['recursive'] = 1
+			r = requests.get(url, params=params)
 
 		tree = ''
 		tree_clean = []
@@ -749,8 +765,9 @@ class GithubAPI(API):
 
 		# Repo User/Client 
 		branch_url, branch_sha = self.get_HEADreference(self.user.username, 
-													self.user.repo, target_branch)
-		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url)
+													self.user.repo, target_branch,
+													self.user.get_token())
+		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url, self.user.get_token())
 		content_tree = self.convert_to_content_tree(expected_tree)
 		# post new tree
 		posted_tree_sha = self.create_tree(self.user.username, content_tree, self.user.repo)

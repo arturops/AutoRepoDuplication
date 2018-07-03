@@ -86,6 +86,11 @@ def done():
 def page_not_found(e):
 	return render_template('404.html'),404
 
+# Handles when API rate limit is exceeded
+@app.errorhandler(403)
+def rate_limit_exceeded(e):
+	return render_template('fail.html'),403
+
 # Handles Server Internal errors
 @app.errorhandler(500)
 def server_error(e):
