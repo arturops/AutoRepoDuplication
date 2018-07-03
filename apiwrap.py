@@ -569,7 +569,7 @@ class GithubAPI(API):
 			if item['mode'] == '100644':
 				file_path = item['path']
 				blob_sha, blob_content = self.create_blob(self.user.username, file_path, '', self.user.repo)
-				if blob_sha != item['sha']:
+				if self.debug and blob_sha != item['sha']:
 					print('\n**********  FILE: {} does NOT have SAME SHA as tree !  ***********\n'.format(file_path))
 				del item['sha']
 				item['content'] = blob_content
@@ -787,7 +787,15 @@ class GithubAPI(API):
 
 
 	def get_owner_repo_tree(self, origin_branch='master'):
+		"""
+		Retrieves a recursive tree from an owner repo.
+		
+		Parameters:
+			origin_branch : is the branch of the owner that will be copied
 
+		Returns:
+			expected_tree : owner's repo tree
+		"""
 		# Repo Owner 
 		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
 													self.owner.repo, origin_branch)
