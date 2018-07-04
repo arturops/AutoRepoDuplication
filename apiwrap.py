@@ -773,7 +773,8 @@ class GithubAPI(API):
 
 		# Check for the user's token to be valid
 		if self.user.get_token() is self.user.INVALID_TOKEN:
-			print('ERROR -------- INVALID TOKEN -----')
+			if self.debug:
+				print('ERROR -------- INVALID TOKEN -----------')
 			return False
 		
 		# retrieve repo structure of owner github
@@ -782,7 +783,7 @@ class GithubAPI(API):
 		# create and duplicate repo in user's github
 		success = self.commit_repo_to_user( expected_tree, target_branch='master')
 		
-		if success:
+		if success and self.debug:
 			print(' ----------------- SUCCESS --------------------')
 			print('OWNER {}'.format(self.owner.username))
 			print('USER {}'.format(self.user.username))
@@ -834,7 +835,8 @@ class GithubAPI(API):
 
 		# Check for the user's token to be valid
 		if self.user.get_token() is self.user.INVALID_TOKEN:
-			print('ERROR -------- INVALID TOKEN -----')
+			if self.debug:
+				print('ERROR -------- INVALID TOKEN -----------')
 			return False
 
 		# check for expected tree
