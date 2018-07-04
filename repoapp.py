@@ -92,7 +92,7 @@ def access():
 #
 #	2. "Code" received is invalid to exchange for a Github's user token or the token
 #		retrieval failed, displays message:
-#			'Code from Github is not valid or no access token obtained to start the process!
+#			'Code from Github is not valid, it expired  or no access token obtained to start the process!
 #								 Sorry! Please click Try Again!'
 #	
 #	3. "Code" received was valid and token obtained, but failed to duplicate repo,
@@ -124,7 +124,7 @@ def done():
 			success_token = github.get_user_token(code) 
 			# check if the token was retrieved properly otherwise code might be invalid
 			if success_token is False: 
-				danger_str = 'Code from Github is not valid or no access token obtained to start the process!\
+				danger_str = 'Code from Github is not valid, it expired or no access token obtained to start the process!\
 								 Sorry! Please click Try Again!'
 				flash(danger_str,'danger')
 				return render_template('fail.html', title='Ooops')
