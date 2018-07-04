@@ -3,10 +3,12 @@
 # from one account to another
 
 
-from flask import Flask, render_template, url_for, flash, redirect, request
+from flask import Flask, render_template, url_for, flash, redirect, request, send_from_directory
 from forms import GithubUserForm
 import apiwrap
 import mistune
+import os
+
 
 app = Flask(__name__)
 
@@ -96,6 +98,10 @@ def done():
 	return render_template('fail.html', title='Ooops')
 
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'templates'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 # Handles page not found
 @app.errorhandler(404)
