@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 # App configuration
 app.config['SECRET_KEY'] = '2aba1f6ebe92e925ec34c8486003cf08'
-app.config['DEBUG'] = False
+app.config['DEBUG'] = True
 
 
 # Home page
