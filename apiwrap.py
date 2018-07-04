@@ -776,38 +776,12 @@ class GithubAPI(API):
 			print('ERROR -------- INVALID TOKEN -----')
 			return False
 		
-
-		# owner repo fetch 
-		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
-													self.owner.repo, origin_branch)
-		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url) 
-		target_tree = self.get_target_tree(self.owner.username, HEAD_tree_sha, self.owner.repo, recursive_tree=True)
-		
-		if target_tree is None:
-			return False
-
-		expected_tree_sha = target_tree['sha']
-		expected_tree = target_tree['tree']
-
+		# retrieve repo structure of owner github
+		expected_tree = self.get_owner_repo_tree(origin_branch='master')
 
 		# create and duplicate repo in user's github
-
-		success = self.create_repo(self.user.repo)
-		success = self.get_user_username()
- 
-		branch_url, branch_sha = self.get_HEADreference(self.user.username, 
-													self.user.repo, target_branch,
-													self.user.get_token())
-		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url, self.user.get_token())
-		content_tree = self.convert_to_content_tree(expected_tree)
-		# post new tree
-		posted_tree_sha = self.create_tree(self.user.username, content_tree, self.user.repo)
-		# create a commit for the tree
-		commit_sha = self.create_commit(posted_tree_sha, self.user.username, self.user.repo)
-		# update reference
-		reference = 'heads/{}'.format(target_branch)
-		success = self.update_reference(self.user.username, reference, commit_sha, self.user.repo, force_update=True)
-
+		success = self.commit_repo_to_user( expected_tree, target_branch='master')
+		
 		if success:
 			print(' ----------------- SUCCESS --------------------')
 			print('OWNER {}'.format(self.owner.username))
@@ -832,6 +806,7 @@ class GithubAPI(API):
 		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url) 
 		target_tree = self.get_target_tree(self.owner.username, HEAD_tree_sha, self.owner.repo, recursive_tree=True)
 		
+		expected_tree = None
 		if target_tree is not None:	
 			expected_tree = target_tree['tree']
 
@@ -883,11 +858,6 @@ class GithubAPI(API):
 		# update reference
 		reference = 'heads/{}'.format(target_branch)
 		success = self.update_reference(self.user.username, reference, commit_sha, self.user.repo, force_update=True)
-
-		if success:
-			print(' ----------------- SUCCESS --------------------')
-			print('OWNER {}'.format(self.owner.username))
-			print('USER {}'.format(self.user.username))
 
 		return success
 
