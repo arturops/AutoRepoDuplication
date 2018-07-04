@@ -604,18 +604,20 @@ class GithubAPI(API):
 			if item['mode'] == '100644':
 				file_path = item['path']
 				blob_sha, blob_content = self.create_blob(self.user.username, file_path, '', self.user.repo)
-				# This helps to not append something that was not found
-				if blob_content is not None:
-					del item['sha']
-					item['content'] = blob_content
-					content_tree.append(item)
-
+				
+				# Debug goes before deleting the SHA key
 				if self.debug:
 					if blob_sha is not None:
 						if blob_sha != item['sha']:
 							print('\n********** WARNING!! AR repo FILE: {} does NOT have SAME SHA\
 							 as the one in the owner Github tree !  ***********\n'.format(file_path))
 
+
+				# This helps to not append something that was not found
+				if blob_content is not None:
+					del item['sha']
+					item['content'] = blob_content
+					content_tree.append(item)
 
 		return content_tree
 
