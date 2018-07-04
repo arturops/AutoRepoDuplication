@@ -40,8 +40,13 @@ def about():
 @app.route('/docs')
 def docs():
 	markdown = mistune.Markdown(escape=True, hard_wrap=True)
-	with open('README.md', 'r') as content_file:
+	
+	try:
+		with open('README.md', 'r') as content_file:
 			content = content_file.read()
+	except IOError:
+		content = '## No Documentation found !!'
+
 	markup_html = markdown(content)
 	return render_template('install.html', title='Installation', markup_html=markup_html)
 
@@ -50,8 +55,13 @@ def docs():
 @app.route('/techinfo')
 def techinfo():
 	markdown = mistune.Markdown(escape=True, hard_wrap=True)
-	with open('TechInfo.md', 'r') as content_file:
+	
+	try:
+		with open('TechInfo.md', 'r') as content_file:
 			content = content_file.read()
+	except IOError:
+		content = '## No Technical documentation found !!'
+
 	markup_html = markdown(content)
 	return render_template('techinfo.html', title='Info', markup_html=markup_html)
 

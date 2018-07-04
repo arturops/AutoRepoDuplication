@@ -160,9 +160,20 @@ class GithubAPI(API):
 		"""
 		API.__init__(self, debug=debug)
 		
-		# read owner_info
-		with open('owner_info.txt') as json_file:
-			owner_info = json.load(json_file)
+		# read owner_info file to configure the app
+		try:
+			with open('owner_info.txt') as json_file:
+				owner_info = json.load(json_file)
+		except IOError: 
+			# Log ERROR all the time it happens and default initialize owner_info
+			print('\n\n*************************************************************************************************************')
+			print('**     ERROR !!!!     NO owner_info.txt FOUND!!!!      CANNOT CONFIGURE YOUR APP PROPERLY !!!              **')
+			print('**         Check the Documentation - Installation manual, section "AR Configuration File"!!                **')
+			print('*************************************************************************************************************\n\n')
+			
+			owner_info = json.loads('{ "owner" : {"username" : "", "repo" : "NoIdea"},\
+									"user" : {"repo": "AutoRepo"}, \
+									"app" : {"client_id":"","client_secret":""}}')
 
 		self.user = GithubAPIuser(owner_info['user']['repo'])
 		self.user.username = 'Unknownn' #Extracted after authorization token is obtained
@@ -438,10 +449,15 @@ class GithubAPI(API):
 			file : Filename to retrieve the content
 
 		Returns:
-			content : Content of the file
+			content : Content of the file. If the file doesn't exists it returns None
 		"""
-		with open(path+file, 'r') as content_file:
-			content = content_file.read()
+		try:
+			with open(path+file, 'r') as content_file:
+				content = content_file.read()
+		except IOError:
+				content = None
+				if self.debug:
+					print('File: {} NOT FOUND!!'.format(file))
 		return content
 
 
@@ -469,30 +485,31 @@ class GithubAPI(API):
 				content : Content of the file
 		"""
 		
-		url = self.__github_url('repos/{}/{}/git/blobs'.format(owner,repo_name)) 
-		#GITHUB_API + 'repos/{}/{}/git/blobs'.format(owner,repo)
-
+		sha = None
 		content =  self.get_file_content(file_path, file)
 		
+		if content is not None:
 
-		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
+			url = self.__github_url('repos/{}/{}/git/blobs'.format(owner,repo_name)) 
+
+			headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
 		
-		#python source code is utf-8 by default, so no need to encode it
-		payload = { "content": content,
-					"encoding": "utf-8" }
+			#python source code is utf-8 by default, so no need to encode it
+			payload = { "content": content,
+						"encoding": "utf-8" }
 
 		
-		r = requests.post(url, headers=headers, json=payload)
+			r = requests.post(url, headers=headers, json=payload)
 
-		sha = None
-		if r.status_code == 201:
-			sha = r.json()['sha']
+			
+			if r.status_code == 201:
+				sha = r.json()['sha']
 
-		if self.debug:
-			if r.status_code == 201: 
-				print('Blob SHA {}'.format(sha))
+			if self.debug:
+				if r.status_code == 201: 
+					print('Blob SHA {}'.format(sha))
 
-			self.check_response('POST', url, r, payload, 201, ' creating blob!! ')
+				self.check_response('POST', url, r, payload, 201, ' creating blob!! ')
 
 		
 		if return_content:
@@ -587,11 +604,18 @@ class GithubAPI(API):
 			if item['mode'] == '100644':
 				file_path = item['path']
 				blob_sha, blob_content = self.create_blob(self.user.username, file_path, '', self.user.repo)
-				if self.debug and blob_sha != item['sha']:
-					print('\n**********  FILE: {} does NOT have SAME SHA as tree !  ***********\n'.format(file_path))
-				del item['sha']
-				item['content'] = blob_content
-				content_tree.append(item)
+				# This helps to not append something that was not found
+				if blob_content is not None:
+					del item['sha']
+					item['content'] = blob_content
+					content_tree.append(item)
+
+				if self.debug:
+					if blob_sha is not None:
+						if blob_sha != item['sha']:
+							print('\n********** WARNING!! AR repo FILE: {} does NOT have SAME SHA\
+							 as the one in the owner Github tree !  ***********\n'.format(file_path))
+
 
 		return content_tree
 
