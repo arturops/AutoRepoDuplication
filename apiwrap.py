@@ -4,7 +4,7 @@ import json
 
 class APIuser():
 
-	INVALID_TOKEN = 'Unknown'
+	INVALID_TOKEN = None
 
 	def __init__(self):
 		"""
@@ -94,6 +94,40 @@ class API():
 			None
 		"""
 		print(message)
+
+
+	def check_response(self, method, url, response, payload='None', success_code=None, task_message='' ):
+		"""
+		Print on the stdout the payload in the request, the type of request and, the response URL, the status 
+		of the response and the content.
+
+		Parameters:
+			method : String describing the method used for the HTTP request: POST, GET, PUT, DELETE, PATCH, ... 
+			payload : If there was payload in the HTTP request, one can eb passed to be printed, else it will
+						will be displayed as 'None'
+			url : the url of the HTTP request
+			response : the response from the HTTP request
+			success_code : The expected success code returned by the response
+							Default value is None
+			task_message : A message to display to describe the task done with the request
+								Default value is ''
+
+		Returns:
+			None
+		"""
+		print('\n\n--------------------------- {} {} --------------------------- '.format(method, url))
+		print('\nPayload: {}'.format(payload))
+		print('\nResponse status code: {}'.format(response.status_code))
+		print('\nResponse URL: {}'.format(response.url))
+		print('\nResponse content:\n{}'.format(response.text))
+
+		if success_code is not None : 
+			if response.status_code == success_code:
+				print('\n------- SUCCESS {} ------- '.format(task_message))
+			else:
+				print('\n------- FAILED {} ------- '.format(task_message))
+
+		return
 
 
 class GithubAPI(API):
@@ -186,40 +220,6 @@ class GithubAPI(API):
 		print('Github phrase:\n\t\t \"{}\"'.format(self.__get_github_motto()))
 
 
-	def check_response(self, method, url, response, payload='None', success_code=None, task_message='' ):
-		"""
-		Print on the stdout the payload in the request, the type of request and, the response URL, the status 
-		of the response and the content.
-
-		Parameters:
-			method : String describing the method used for the HTTP request: POST, GET, PUT, DELETE, PATCH, ... 
-			payload : If there was payload in the HTTP request, one can eb passed to be printed, else it will
-						will be displayed as 'None'
-			url : the url of the HTTP request
-			response : the response from the HTTP request
-			success_code : The expected success code returned by the response
-							Default value is None
-			task_message : A message to display to describe the task done with the request
-								Default value is ''
-
-		Returns:
-			None
-		"""
-		print('\n\n--------------------------- {} {} --------------------------- '.format(method, url))
-		print('\nPayload: {}'.format(payload))
-		print('\nResponse status code: {}'.format(response.status_code))
-		print('\nResponse URL: {}'.format(response.url))
-		print('\nResponse content:\n{}'.format(response.text))
-
-		if success_code is not None : 
-			if response.status_code == success_code:
-				print('\n------- SUCCESS {} ------- '.format(task_message))
-			else:
-				print('\n------- FAILED {} ------- '.format(task_message))
-
-		return
-
-
 	def get_github_auth_url(self, scope='public_repo'):
 		"""
 		Builds the Github auhorization URL
@@ -264,10 +264,15 @@ class GithubAPI(API):
 			# Error
 			self.APIerror('POST {} \nStatus Code: {}'.format(self.GITHUB_TOKEN, r.status_code))
 		else:
-			# parse the response for the access_token
-			token_list = r.text.split('&')
-			token = token_list[0].split('=')[1]
-			
+			# if success response from Github, r.text must have string access_token=#####
+			if 'access_token' in r.text:
+				# parse the response for the access_token
+				token_list = r.text.split('&')
+				token = token_list[0].split('=')[1]
+			else:
+				# When github receives an invalid code it just returns 
+				# error=bad_verification_code, so we better just make token None
+				token = None
 
 		if self.debug:
 			self.check_response('POST', self.GITHUB_TOKEN, r, params)
@@ -278,6 +283,25 @@ class GithubAPI(API):
 				print('\n------- FAILED getting the token!! ------- ')
 
 		return token
+
+
+	def get_user_token(self, code):
+		"""
+		Use get_auth() to retrieve a token from Github, if it fails returns False
+
+		Parameters:
+			code : Github's given code after authorization is completed
+
+		Returns:
+			True if it successfully retrieves and store the user token. Otherwise, returns False
+
+		"""
+		# FIRST THING TO DO AFTER GETTING A CODE FROM GITHUB IS TO FINISH 
+		# THE HANDSHAKE AND GET USER ACCESS TOKEN!!!
+		self.user.set_token( self.get_auth(code) )
+		if self.user.get_token() is None:
+			return False
+		return True
 
 
 	def create_repo(self, repo_name=TARGET_REPO_NAME):
@@ -729,13 +753,16 @@ class GithubAPI(API):
 			return False
 
 
-	def duplicate_repo(self, code, origin_branch='master', target_branch='master'):
+	def duplicate_repo(self, origin_branch='master', target_branch='master'):
 		"""
 		Uses several methods from the GithubAPI class to copy a repo from an owner to the user that
 		authorize the app.
 
+		NOTE: requires user access_token to be valid in order to have success. Before calling 
+		this method, you must have a github code returned after authorization. Then, you must use 
+		such code to call get_user_token(code) to get a valid token for the user.
+
 		Parameters:
-			code : is a code that Github returns after a user authorized the app access to his/her github
 			origin_branch : is the branch of the owner that will be copied
 			target_branch : is the branc of the user in which the owner repo will be copied
 
@@ -743,7 +770,13 @@ class GithubAPI(API):
 			True if it the update reference was succesful, which will imply the repo got copied soccessfully
 
 		"""
+
+		# Check for the user's token to be valid
+		if self.user.get_token() is self.user.INVALID_TOKEN:
+			print('ERROR -------- INVALID TOKEN -----')
+			return False
 		
+
 		# owner repo fetch 
 		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
 													self.owner.repo, origin_branch)
@@ -757,11 +790,7 @@ class GithubAPI(API):
 		expected_tree = target_tree['tree']
 
 
-		# Get user/client token, create and duplicate repo
-
-		self.user.set_token( self.get_auth(code) )
-		if self.user.get_token() is None:
-			return False
+		# create and duplicate repo in user's github
 
 		success = self.create_repo(self.user.repo)
 		success = self.get_user_username()
@@ -773,7 +802,6 @@ class GithubAPI(API):
 		content_tree = self.convert_to_content_tree(expected_tree)
 		# post new tree
 		posted_tree_sha = self.create_tree(self.user.username, content_tree, self.user.repo)
-		print('Expected sha = new sha ? {}'.format(expected_tree_sha==posted_tree_sha))
 		# create a commit for the tree
 		commit_sha = self.create_commit(posted_tree_sha, self.user.username, self.user.repo)
 		# update reference
@@ -798,8 +826,7 @@ class GithubAPI(API):
 		Returns:
 			expected_tree : owner's repo tree
 		"""
-		# Repo Owner 
-		# owner repo fetch 
+		# Fetch Repo-Tree from Owner 
 		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
 													self.owner.repo, origin_branch)
 		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url) 
@@ -811,13 +838,17 @@ class GithubAPI(API):
 		return expected_tree
 
 
-	def commit_repo(self, code, expected_tree, target_branch='master'):
+	def commit_repo_to_user(self, expected_tree, target_branch='master'):
 		"""
 		Uses several methods from the GithubAPI class to commit a repo from an owner's tree to the user that
 		authorize the app.
 
+		NOTE: requires user access_token to be valid in order to have success. Before calling 
+		this method, you must have a github code returned after authorization. Then, you must use 
+		such code to call get_user_token(code) to get a valid token for the user.
+		Also requires you have an expected_tree.
+
 		Parameters:
-			code : is a code that Github returns after a user authorized the app access to his/her github
 			expected_tree: tree to commit to the repo
 			target_branch : is the branc of the user in which the owner repo will be copied
 
@@ -826,11 +857,16 @@ class GithubAPI(API):
 
 		"""
 
-		# Get user/client token, create and duplicate repo
-
-		self.user.set_token( self.get_auth(code) )
-		if self.user.get_token() is None:
+		# Check for the user's token to be valid
+		if self.user.get_token() is self.user.INVALID_TOKEN:
+			print('ERROR -------- INVALID TOKEN -----')
 			return False
+
+		# check for expected tree
+		if expected_tree is None:
+			return False
+
+		# create and duplicate repo in user's Github
 
 		success = self.create_repo(self.user.repo)
 		success = self.get_user_username()
