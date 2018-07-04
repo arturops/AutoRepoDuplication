@@ -169,7 +169,7 @@ class GithubAPI(API):
 		r = requests.get(self.__github_url('zen'))
 		if r.status_code >= 400:
 			# Error
-			self.APIerror('GET /zen {}'.format(resp.status_code))
+			self.APIerror('GET /zen {}'.format(r.status_code))
 		return str(r.text)
 
 
@@ -211,7 +211,7 @@ class GithubAPI(API):
 		print('\nResponse URL: {}'.format(response.url))
 		print('\nResponse content:\n{}'.format(response.text))
 
-		if success_code != None : 
+		if success_code is not None : 
 			if response.status_code == success_code:
 				print('\n------- SUCCESS {} ------- '.format(task_message))
 			else:
@@ -272,18 +272,12 @@ class GithubAPI(API):
 		if self.debug:
 			self.check_response('POST', self.GITHUB_TOKEN, r, params)
 
-			if token:
+			if token is not None:
 				print('\n------- SUCCESS getting the token!! ------- ')
 			else:
 				print('\n------- FAILED getting the token!! ------- ')
 
-		return token 
-
-
-		if self.user.get_token() != self.user.INVALID_TOKEN:
-			return True
-		else:
-			return False
+		return token
 
 
 	def create_repo(self, repo_name=TARGET_REPO_NAME):
@@ -338,7 +332,7 @@ class GithubAPI(API):
 			branch: Branch in the repo_name to find the reference from in the user's Github
 			NOTE: Default branch is master. 
 
-			token : access token to give authorization
+			token : access token to give authorization. Default value is None
 
 		Returns:
 			branch_url : Github's url where the branch reference is located
@@ -351,7 +345,7 @@ class GithubAPI(API):
 		headers = { 'Authorization' : 'token {}'.format(token)}
 
 
-		if token:
+		if token is not None:
 			r = requests.get(url, headers=headers)
 		else:
 			r = requests.get(url, params=self.client_app_info)
@@ -399,7 +393,7 @@ class GithubAPI(API):
 		if r.status_code == 200: 
 			tree_url, tree_sha = r.json()['tree']['url'],r.json()['tree']['sha']
 		else:
-			tree_url, tree_sha = '',''
+			tree_url, tree_sha = None, None
 
 
 		if self.debug:
@@ -466,7 +460,7 @@ class GithubAPI(API):
 		
 		r = requests.post(url, headers=headers, json=payload)
 
-		sha = ''
+		sha = None
 		if r.status_code == 201:
 			sha = r.json()['sha']
 
@@ -499,7 +493,7 @@ class GithubAPI(API):
 						Default value is True
 
 		Returns:
-			tree : the tree structure
+			tree : the tree structure. If no success on the response, it returns None
 		"""
 		
 		url = self.__github_url('repos/{}/{}/git/trees/{}'.format(owner,repo_name,tree_sha))
@@ -513,7 +507,7 @@ class GithubAPI(API):
 			params['recursive'] = 1
 			r = requests.get(url, params=params)
 
-		tree = ''
+		tree = None
 		tree_clean = []
 		if r.status_code == 200:
 			tree = r.json() # tree = json.loads(r.text)
@@ -601,7 +595,7 @@ class GithubAPI(API):
 		
 		headers = { 'Authorization' : 'token {}'.format(self.user.get_token())}
 
-		if base_tree == None:
+		if base_tree is None:
 			payload = { 'tree' : tree }
 		else:
 			payload = { 'base_tree' : base_tree,
@@ -642,7 +636,7 @@ class GithubAPI(API):
 		url = self.__github_url('repos/{}/{}/git/commits'.format(owner, repo_name))
 
 		parents = []
-		if HEAD_tree_sha != None:
+		if HEAD_tree_sha is not None:
 			parents.append(HEAD_tree_sha)
 
 
@@ -750,18 +744,26 @@ class GithubAPI(API):
 
 		"""
 		
-		# Repo Owner 
+		# owner repo fetch 
 		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
 													self.owner.repo, origin_branch)
 		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url) 
 		target_tree = self.get_target_tree(self.owner.username, HEAD_tree_sha, self.owner.repo, recursive_tree=True)
+		
+		if target_tree is None:
+			return False
+
 		expected_tree_sha = target_tree['sha']
 		expected_tree = target_tree['tree']
 
 
-		# Get user/client token and create repo
+		# Get user/client token, create and duplicate repo
+
 		self.user.set_token( self.get_auth(code) )
-		success = self.create_repo(self.user.repo) #think it should get token
+		if self.user.get_token() is None:
+			return False
+
+		success = self.create_repo(self.user.repo)
 		success = self.get_user_username()
  
 		branch_url, branch_sha = self.get_HEADreference(self.user.username, 
@@ -797,13 +799,14 @@ class GithubAPI(API):
 			expected_tree : owner's repo tree
 		"""
 		# Repo Owner 
+		# owner repo fetch 
 		branch_url, branch_sha = self.get_HEADreference(self.owner.username, 
 													self.owner.repo, origin_branch)
 		HEAD_tree_url, HEAD_tree_sha = self.get_commit(branch_url) 
-		target_tree = self.get_target_tree(self.owner.username, HEAD_tree_sha,
-											 self.owner.repo, recursive_tree=True)
-
-		expected_tree = target_tree['tree']
+		target_tree = self.get_target_tree(self.owner.username, HEAD_tree_sha, self.owner.repo, recursive_tree=True)
+		
+		if target_tree is not None:	
+			expected_tree = target_tree['tree']
 
 		return expected_tree
 
@@ -822,13 +825,16 @@ class GithubAPI(API):
 			True if it the update reference was succesful, which will imply the repo got copied soccessfully
 
 		"""
-		# Get user/client token and create repo
+
+		# Get user/client token, create and duplicate repo
+
 		self.user.set_token( self.get_auth(code) )
+		if self.user.get_token() is None:
+			return False
+
 		success = self.create_repo(self.user.repo)
 		success = self.get_user_username()
 
-
-		# Repo User/Client 
 		branch_url, branch_sha = self.get_HEADreference(self.user.username, 
 													self.user.repo, target_branch,
 													self.user.get_token())
