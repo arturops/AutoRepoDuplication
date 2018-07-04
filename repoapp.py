@@ -160,7 +160,8 @@ def done():
 def page_not_found(e):
 	return render_template('404.html'),404
 
-# Handles when API rate limit is exceeded
+# Handles Forbidden error
+# In this case can be when GithubAPI rate limit is exceeded
 @app.errorhandler(403)
 def rate_limit_exceeded(e):
 	return render_template('403.html'),403
