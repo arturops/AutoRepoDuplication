@@ -12,7 +12,7 @@ import mistune
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = '2aba1f6ebe92e925ec34c8486003cf08'
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 
 
 
